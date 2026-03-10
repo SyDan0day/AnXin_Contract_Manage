@@ -9,6 +9,12 @@ const routes = [
     meta: { title: '登录' }
   },
   {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/Register.vue'),
+    meta: { title: '注册' }
+  },
+  {
     path: '/',
     component: () => import('@/views/Layout.vue'),
     redirect: '/dashboard',
@@ -64,7 +70,7 @@ router.beforeEach((to, from, next) => {
   
   if (to.meta.requiresAuth && !userStore.token) {
     next('/login')
-  } else if (to.path === '/login' && userStore.token) {
+  } else if ((to.path === '/login' || to.path === '/register') && userStore.token) {
     next('/')
   } else {
     next()
