@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"contract-manage/middleware"
 	"contract-manage/services"
 	"net/http"
 	"strconv"
@@ -57,7 +58,13 @@ func (h *ContractHandler) CreateContract(c *gin.Context) {
 		return
 	}
 
-	contract, err := h.contractService.CreateContract(input, 1)
+	userID, exists := middleware.GetCurrentUserID(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	contract, err := h.contractService.CreateContract(input, userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -126,7 +133,13 @@ func (h *ContractHandler) CreateContractExecution(c *gin.Context) {
 		return
 	}
 
-	execution, err := h.contractService.CreateContractExecution(input, 1)
+	userID, exists := middleware.GetCurrentUserID(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	execution, err := h.contractService.CreateContractExecution(input, userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -158,7 +171,13 @@ func (h *ContractHandler) CreateContractDocument(c *gin.Context) {
 		return
 	}
 
-	document, err := h.contractService.CreateDocument(input, 1)
+	userID, exists := middleware.GetCurrentUserID(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	document, err := h.contractService.CreateDocument(input, userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

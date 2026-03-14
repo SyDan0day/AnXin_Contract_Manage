@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"contract-manage/middleware"
 	"contract-manage/services"
 	"net/http"
 	"strconv"
@@ -47,8 +48,14 @@ func (h *ApprovalHandler) CreateApproval(c *gin.Context) {
 		return
 	}
 
+	userID, exists := middleware.GetCurrentUserID(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
 	input.ContractID = uint(contractID)
-	approval, err := h.approvalService.CreateApprovalRecord(input, 1)
+	approval, err := h.approvalService.CreateApprovalRecord(input, userID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

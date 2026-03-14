@@ -67,7 +67,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := middleware.GenerateToken(user.Username)
+	token, err := middleware.GenerateTokenWithUserID(user.ID, user.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})
 		return

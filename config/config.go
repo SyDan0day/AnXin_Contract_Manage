@@ -19,6 +19,10 @@ type Config struct {
 	AccessTokenExpireMinutes int    `mapstructure:"ACCESS_TOKEN_EXPIRE_MINUTES"`
 
 	UploadDir string `mapstructure:"UPLOAD_DIR"`
+
+	AdminUsername string `mapstructure:"ADMIN_USERNAME"`
+	AdminPassword string `mapstructure:"ADMIN_PASSWORD"`
+	AdminEmail    string `mapstructure:"ADMIN_EMAIL"`
 }
 
 var AppConfig Config
@@ -38,6 +42,10 @@ func LoadConfig() error {
 	viper.SetDefault("JWT_ALGORITHM", "HS256")
 	viper.SetDefault("ACCESS_TOKEN_EXPIRE_MINUTES", 30)
 	viper.SetDefault("UPLOAD_DIR", "uploads")
+
+	viper.SetDefault("ADMIN_USERNAME", "admin")
+	viper.SetDefault("ADMIN_PASSWORD", "admin123")
+	viper.SetDefault("ADMIN_EMAIL", "admin@example.com")
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {

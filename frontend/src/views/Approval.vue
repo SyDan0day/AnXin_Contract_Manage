@@ -63,8 +63,8 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getContractList, getApprovalRecords, createApproval, updateApproval } from '@/api/contract'
-import { getApprovalRecords as getApprovals } from '@/api/approval'
+import { getContractList } from '@/api/contract'
+import { getApprovalRecords, createApproval, updateApproval } from '@/api/approval'
 
 const loading = ref(false)
 const dialogVisible = ref(false)

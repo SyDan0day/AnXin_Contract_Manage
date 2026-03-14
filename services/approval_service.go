@@ -4,8 +4,6 @@ import (
 	"contract-manage/models"
 	"errors"
 	"time"
-
-	"gorm.io/gorm"
 )
 
 type ApprovalService struct{}
@@ -144,14 +142,14 @@ func (s *ApprovalService) GetExpiringContracts(days int) ([]models.Contract, err
 }
 
 type Statistics struct {
-	TotalContracts      int     `json:"total_contracts"`
-	ActiveContracts     int     `json:"active_contracts"`
-	PendingContracts    int     `json:"pending_contracts"`
-	CompletedContracts  int     `json:"completed_contracts"`
-	TotalAmount         float64 `json:"total_amount"`
-	ThisMonthContracts  int     `json:"this_month_contracts"`
-	ThisMonthAmount     float64 `json:"this_month_amount"`
-	ExpiringSoon        int     `json:"expiring_soon"`
+	TotalContracts      int64    `json:"total_contracts"`
+	ActiveContracts     int64    `json:"active_contracts"`
+	PendingContracts   int64    `json:"pending_contracts"`
+	CompletedContracts int64    `json:"completed_contracts"`
+	TotalAmount        float64  `json:"total_amount"`
+	ThisMonthContracts int64    `json:"this_month_contracts"`
+	ThisMonthAmount    float64  `json:"this_month_amount"`
+	ExpiringSoon       int      `json:"expiring_soon"`
 }
 
 func (s *ApprovalService) GetStatistics() (*Statistics, error) {

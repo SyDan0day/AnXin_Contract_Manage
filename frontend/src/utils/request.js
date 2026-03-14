@@ -39,7 +39,7 @@ request.interceptors.response.use(
       } else if (status === 500) {
         ElMessage.error('服务器错误')
       } else {
-        ElMessage.error(data.detail || '请求失败')
+        ElMessage.error(data.error || data.detail || '请求失败')
       }
     } else {
       ElMessage.error('网络错误')

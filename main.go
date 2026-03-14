@@ -3,7 +3,9 @@ package main
 import (
 	"contract-manage/config"
 	"contract-manage/handlers"
+	"contract-manage/middleware"
 	"contract-manage/models"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,6 +17,10 @@ func main() {
 
 	if err := models.InitDB(); err != nil {
 		panic("Failed to connect database: " + err.Error())
+	}
+
+	if err := models.InitAdmin(); err != nil {
+		fmt.Println("Warning: Failed to create admin user: " + err.Error())
 	}
 
 	r := gin.Default()
@@ -50,13 +56,14 @@ func main() {
 	{
 		auth.POST("/register", authHandler.Register)
 		auth.POST("/login", authHandler.Login)
-		auth.GET("/users", authHandler.GetUsers)
-		auth.GET("/users/:user_id", authHandler.GetUserByID)
-		auth.PUT("/users/:user_id", authHandler.UpdateUser)
-		auth.DELETE("/users/:user_id", authHandler.DeleteUser)
+		auth.GET("/users", middleware.AuthMiddleware(), authHandler.GetUsers)
+		auth.GET("/users/:user_id", middleware.AuthMiddleware(), authHandler.GetUserByID)
+		auth.PUT("/users/:user_id", middleware.AuthMiddleware(), authHandler.UpdateUser)
+		auth.DELETE("/users/:user_id", middleware.AuthMiddleware(), authHandler.DeleteUser)
 	}
 
 	api := r.Group("/api")
+	api.Use(middleware.AuthMiddleware())
 	{
 		api.GET("/customers", customerHandler.GetCustomers)
 		api.GET("/customers/:customer_id", customerHandler.GetCustomerByID)
