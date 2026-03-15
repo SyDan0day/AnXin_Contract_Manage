@@ -133,3 +133,40 @@ func (h *CustomerHandler) CreateContractType(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, contractType)
 }
+
+func (h *CustomerHandler) UpdateContractType(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("type_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var input services.ContractTypeCreateInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	contractType, err := h.customerService.UpdateContractType(uint(id), input)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, contractType)
+}
+
+func (h *CustomerHandler) DeleteContractType(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("type_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	if err := h.customerService.DeleteContractType(uint(id)); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(http.StatusNoContent)
+}

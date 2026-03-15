@@ -30,6 +30,7 @@
           <el-menu-item index="/contracts">
             <el-icon><Document /></el-icon>
             <span>合同管理</span>
+            <el-badge v-if="notificationCounts.expiringContracts > 0" :value="notificationCounts.expiringContracts" :max="99" class="menu-badge" />
           </el-menu-item>
           <el-menu-item index="/customers">
             <el-icon><OfficeBuilding /></el-icon>
@@ -38,10 +39,12 @@
           <el-menu-item index="/approvals">
             <el-icon><Checked /></el-icon>
             <span>审批管理</span>
+            <el-badge v-if="notificationCounts.pendingApprovals + notificationCounts.pendingStatusChanges > 0" :value="notificationCounts.pendingApprovals + notificationCounts.pendingStatusChanges" :max="99" class="menu-badge" />
           </el-menu-item>
           <el-menu-item index="/reminders">
             <el-icon><Bell /></el-icon>
             <span>到期提醒</span>
+            <el-badge v-if="notificationCounts.expiringContracts > 0" :value="notificationCounts.expiringContracts" :max="99" class="menu-badge" />
           </el-menu-item>
           <el-menu-item index="/users">
             <el-icon><UserFilled /></el-icon>
@@ -109,10 +112,11 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { ElMessageBox } from 'element-plus'
+import { getNotificationCounts } from '@/api/approval'
 import { 
   Odometer, Document, OfficeBuilding, Checked, Bell, 
   UserFilled, User, ArrowDown, SwitchButton 
@@ -121,6 +125,35 @@ import {
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+
+const notificationCounts = ref({
+  pendingApprovals: 0,
+  pendingStatusChanges: 0,
+  expiringContracts: 0,
+  total: 0
+})
+
+let notificationTimer = null
+
+const loadNotifications = async () => {
+  try {
+    const counts = await getNotificationCounts()
+    notificationCounts.value = counts
+  } catch (error) {
+    console.error('Failed to load notifications:', error)
+  }
+}
+
+onMounted(() => {
+  loadNotifications()
+  notificationTimer = setInterval(loadNotifications, 30000)
+})
+
+onUnmounted(() => {
+  if (notificationTimer) {
+    clearInterval(notificationTimer)
+  }
+})
 
 const activeMenu = computed(() => route.path)
 
@@ -136,7 +169,20 @@ const routeNames = {
 const currentRoute = computed(() => routeNames[route.path])
 
 const handleCommand = (command) => {
-  if (command === 'logout') {
+  if (command === 'profile') {
+    ElMessageBox.alert(
+      `<div style="padding: 10px;">
+        <p><strong>用户名：</strong>${userStore.userInfo?.username || '-'}</p>
+        <p><strong>邮箱：</strong>${userStore.userInfo?.email || '-'}</p>
+        <p><strong>角色：</strong>${userStore.userInfo?.role === 'admin' ? '管理员' : '普通用户'}</p>
+      </div>`,
+      '个人设置', 
+      {
+        confirmButtonText: '确定',
+        dangerouslyUseHTMLString: true,
+      }
+    )
+  } else if (command === 'logout') {
     ElMessageBox.confirm('确定要退出登录吗？', '提示', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
@@ -204,6 +250,13 @@ const handleCommand = (command) => {
   color: #64748B;
   font-weight: 500;
   transition: all 0.2s ease;
+  position: relative;
+}
+
+.menu-badge {
+  position: absolute;
+  right: 60px;
+  top: 8px;
 }
 
 :deep(.el-menu-item:hover) {

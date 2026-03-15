@@ -7,6 +7,13 @@ export const getApprovalRecords = (contractId) => {
   })
 }
 
+export const getPendingApprovals = () => {
+  return request({
+    url: '/pending-approvals',
+    method: 'get'
+  })
+}
+
 export const createApproval = (data) => {
   return request({
     url: `/contracts/${data.contract_id}/approvals`,
@@ -56,6 +63,13 @@ export const getExpiringContracts = (days = 30) => {
 export const getStatistics = () => {
   return request({
     url: '/statistics',
+    method: 'get'
+  })
+}
+
+export const getNotificationCounts = () => {
+  return request({
+    url: '/notifications/count',
     method: 'get'
   })
 }

@@ -26,9 +26,63 @@ const (
 	StatusPending    ContractStatus = "pending"
 	StatusApproved   ContractStatus = "approved"
 	StatusActive     ContractStatus = "active"
+	StatusInProgress ContractStatus = "in_progress"
+	StatusPendingPay ContractStatus = "pending_pay"
 	StatusCompleted  ContractStatus = "completed"
 	StatusTerminated ContractStatus = "terminated"
+	StatusArchived   ContractStatus = "archived"
 )
+
+const (
+	StatusDraftText      = "草稿"
+	StatusPendingText    = "待审批"
+	StatusApprovedText   = "已批准"
+	StatusActiveText     = "已生效"
+	StatusInProgressText = "执行中"
+	StatusPendingPayText = "待付款"
+	StatusCompletedText  = "已完成"
+	StatusTerminatedText = "已终止"
+	StatusArchivedText   = "已归档"
+)
+
+func GetStatusText(status ContractStatus) string {
+	switch status {
+	case StatusDraft:
+		return StatusDraftText
+	case StatusPending:
+		return StatusPendingText
+	case StatusApproved:
+		return StatusApprovedText
+	case StatusActive:
+		return StatusActiveText
+	case StatusInProgress:
+		return StatusInProgressText
+	case StatusPendingPay:
+		return StatusPendingPayText
+	case StatusCompleted:
+		return StatusCompletedText
+	case StatusTerminated:
+		return StatusTerminatedText
+	case StatusArchived:
+		return StatusArchivedText
+	default:
+		return string(status)
+	}
+}
+
+func GetStatusOptions() []map[string]string {
+	return []map[string]string{
+		{"value": string(StatusDraft), "label": StatusDraftText},
+		{"value": string(StatusPending), "label": StatusPendingText},
+		{"value": string(StatusApproved), "label": StatusApprovedText},
+		{"value": string(StatusActive), "label": StatusActiveText},
+		{"value": string(StatusInProgress), "label": StatusInProgressText},
+		{"value": string(StatusPendingPay), "label": StatusPendingPayText},
+		{"value": string(StatusCompleted), "label": StatusCompletedText},
+		{"value": string(StatusTerminated), "label": StatusTerminatedText},
+		{"value": string(StatusArchived), "label": StatusArchivedText},
+	}
+}
 
 type ApprovalStatus string
 
@@ -127,15 +181,17 @@ type ContractExecution struct {
 }
 
 type ApprovalRecord struct {
-	ID         uint           `gorm:"primaryKey" json:"id"`
-	ContractID uint           `gorm:"index" json:"contract_id"`
-	ApproverID uint           `gorm:"index" json:"approver_id"`
-	Status     ApprovalStatus `gorm:"size:20;default:pending" json:"status"`
-	Comment    string         `gorm:"type:text" json:"comment"`
-	ApprovedAt *time.Time     `json:"approved_at"`
-	CreatedAt  time.Time      `json:"created_at"`
-	Contract   *Contract      `gorm:"foreignKey:ContractID" json:"contract,omitempty"`
-	Approver   *User          `gorm:"foreignKey:ApproverID" json:"approver,omitempty"`
+	ID           uint           `gorm:"primaryKey" json:"id"`
+	ContractID   uint           `gorm:"index" json:"contract_id"`
+	ApproverID   uint           `gorm:"index" json:"approver_id"`
+	Level        int            `gorm:"default:1" json:"level"`
+	ApproverRole string         `gorm:"size:20" json:"approver_role"`
+	Status       ApprovalStatus `gorm:"size:20;default:pending" json:"status"`
+	Comment      string         `gorm:"type:text" json:"comment"`
+	ApprovedAt   *time.Time     `json:"approved_at"`
+	CreatedAt    time.Time      `json:"created_at"`
+	Contract     *Contract      `gorm:"foreignKey:ContractID" json:"contract,omitempty"`
+	Approver     *User          `gorm:"foreignKey:ApproverID" json:"approver,omitempty"`
 }
 
 type Document struct {
@@ -149,6 +205,52 @@ type Document struct {
 	UploaderID uint      `gorm:"index" json:"uploader_id"`
 	CreatedAt  time.Time `json:"created_at"`
 	Contract   *Contract `gorm:"foreignKey:ContractID" json:"contract,omitempty"`
+}
+
+type LifecycleEventType string
+
+const (
+	LifecycleCreated    LifecycleEventType = "created"
+	LifecycleSubmitted  LifecycleEventType = "submitted"
+	LifecycleApproved   LifecycleEventType = "approved"
+	LifecycleRejected   LifecycleEventType = "rejected"
+	LifecycleActivated  LifecycleEventType = "activated"
+	LifecycleProgress   LifecycleEventType = "progress"
+	LifecyclePayment    LifecycleEventType = "payment"
+	LifecycleCompleted  LifecycleEventType = "completed"
+	LifecycleTerminated LifecycleEventType = "terminated"
+	LifecycleArchived   LifecycleEventType = "archived"
+)
+
+type ContractLifecycleEvent struct {
+	ID          uint               `gorm:"primaryKey" json:"id"`
+	ContractID  uint               `gorm:"index" json:"contract_id"`
+	EventType   LifecycleEventType `gorm:"size:50" json:"event_type"`
+	FromStatus  string             `gorm:"size:50" json:"from_status"`
+	ToStatus    string             `gorm:"size:50" json:"to_status"`
+	Amount      float64            `json:"amount"`
+	Description string             `gorm:"type:text" json:"description"`
+	OperatorID  uint               `gorm:"index" json:"operator_id"`
+	CreatedAt   time.Time          `json:"created_at"`
+	Contract    *Contract          `gorm:"foreignKey:ContractID" json:"contract,omitempty"`
+}
+
+type StatusChangeRequest struct {
+	ID          uint       `gorm:"primaryKey" json:"id"`
+	ContractID  uint       `gorm:"index" json:"contract_id"`
+	FromStatus  string     `gorm:"size:50" json:"from_status"`
+	ToStatus    string     `gorm:"size:50" json:"to_status"`
+	Reason      string     `gorm:"type:text" json:"reason"`
+	RequesterID uint       `gorm:"index" json:"requester_id"`
+	ApproverID  *uint      `gorm:"index" json:"approver_id,omitempty"`
+	Status      string     `gorm:"size:20;default:pending" json:"status"`
+	Comment     string     `gorm:"type:text" json:"comment"`
+	ApprovedAt  *time.Time `json:"approved_at,omitempty"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	Contract    *Contract  `gorm:"foreignKey:ContractID" json:"contract,omitempty"`
+	Requester   *User      `gorm:"foreignKey:RequesterID" json:"requester,omitempty"`
+	Approver    *User      `gorm:"foreignKey:ApproverID" json:"approver,omitempty"`
 }
 
 type Reminder struct {
@@ -192,7 +294,9 @@ func AutoMigrate() error {
 		&ContractExecution{},
 		&ApprovalRecord{},
 		&Document{},
+		&ContractLifecycleEvent{},
 		&Reminder{},
+		&StatusChangeRequest{},
 	)
 }
 

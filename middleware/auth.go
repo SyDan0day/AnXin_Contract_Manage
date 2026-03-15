@@ -29,6 +29,24 @@ func GenerateTokenWithUserID(userID uint, username string) (string, error) {
 	claims := &Claims{
 		UserID:   userID,
 		Username: username,
+		Role:     "user",
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Issuer:    IssuerName,
+			ID:        fmt.Sprintf("%d-%d", userID, time.Now().UnixNano()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(config.AppConfig.SecretKey))
+}
+
+func GenerateTokenWithUserIDAndRole(userID uint, username string, role string) (string, error) {
+	expirationTime := time.Now().Add(time.Duration(config.AppConfig.AccessTokenExpireMinutes) * time.Minute)
+	claims := &Claims{
+		UserID:   userID,
+		Username: username,
+		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -151,6 +169,15 @@ func GetCurrentUsername(c *gin.Context) (string, bool) {
 	}
 	name, ok := username.(string)
 	return name, ok
+}
+
+func GetCurrentUserRole(c *gin.Context) (string, bool) {
+	role, exists := c.Get("role")
+	if !exists {
+		return "", false
+	}
+	r, ok := role.(string)
+	return r, ok
 }
 
 func HashPassword(password string) (string, error) {

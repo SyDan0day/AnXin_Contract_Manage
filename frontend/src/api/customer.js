@@ -53,3 +53,18 @@ export const createContractType = (data) => {
     data
   })
 }
+
+export const updateContractType = (id, data) => {
+  return request({
+    url: `/contract-types/${id}`,
+    method: 'put',
+    data
+  })
+}
+
+export const deleteContractType = (id) => {
+  return request({
+    url: `/contract-types/${id}`,
+    method: 'delete'
+  })
+}

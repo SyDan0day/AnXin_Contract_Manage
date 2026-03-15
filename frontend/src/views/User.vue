@@ -104,7 +104,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getUserList, updateUser, deleteUser } from '@/api/auth'
+import { getUserList, updateUser, deleteUser, register } from '@/api/auth'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
@@ -213,8 +213,8 @@ const handleSubmit = async () => {
         await updateUser(formData.id, formData)
         ElMessage.success('更新成功')
       } else {
-        ElMessage.warning('用户注册功能暂未开放')
-        return
+        await register(formData)
+        ElMessage.success('注册成功')
       }
       dialogVisible.value = false
       loadData()

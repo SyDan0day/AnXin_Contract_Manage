@@ -26,8 +26,17 @@ type LoginRequest struct {
 }
 
 type TokenResponse struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
+	AccessToken string    `json:"access_token"`
+	TokenType   string    `json:"token_type"`
+	UserInfo    *UserInfo `json:"user_info"`
+}
+
+type UserInfo struct {
+	ID       uint   `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	FullName string `json:"full_name"`
+	Role     string `json:"role"`
 }
 
 var (
@@ -120,15 +129,6 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		input.Role = "user"
 	}
 
-	if input.Role == "admin" {
-		userID, _ := middleware.GetCurrentUserID(c)
-		role, _ := c.Get("role")
-		if role != "admin" || userID == 0 {
-			c.JSON(http.StatusForbidden, gin.H{"error": "无权限创建管理员账号"})
-			return
-		}
-	}
-
 	user, err := h.userService.CreateUser(input)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -173,7 +173,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	token, err := middleware.GenerateTokenWithUserID(user.ID, user.Username)
+	token, err := middleware.GenerateTokenWithUserIDAndRole(user.ID, user.Username, string(user.Role))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "登录失败，请稍后重试"})
 		return
@@ -182,6 +182,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	c.JSON(http.StatusOK, TokenResponse{
 		AccessToken: token,
 		TokenType:   "bearer",
+		UserInfo: &UserInfo{
+			ID:       user.ID,
+			Username: user.Username,
+			Email:    user.Email,
+			FullName: user.FullName,
+			Role:     string(user.Role),
+		},
 	})
 }
 

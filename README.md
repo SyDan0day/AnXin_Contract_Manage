@@ -21,14 +21,19 @@
 
 ## 功能模块
 
-- **用户权限管理**：用户注册、登录、角色管理（管理员、普通用户）
-- **客户/供应商管理**：客户信息增删改查、客户分类
+- **用户权限管理**：用户注册、登录、角色管理（管理员、经理、普通用户）
+- **客户/供应商管理**：客户信息增删改查、客户分类、信用等级
 - **合同管理**：合同信息管理、合同分类管理、合同状态跟踪
-- **合同执行跟踪**：进度跟踪、付款记录、执行阶段管理
+- **合同执行跟踪**：进度跟踪、付款记录，执行阶段管理
 - **审批流程**：合同审批、多级审批、审批记录查询
+- **状态变更审批**：关键状态变更（归档、终止、执行中、待付款）需管理员审批
+- **合同生命周期**：完整的合同状态变更历史记录
+- **合同归档**：已完成合同归档管理
 - **到期提醒**：合同到期提醒、续期管理、提醒通知
 - **统计报表**：数据统计分析、图表展示
 - **文档管理**：合同文件上传、版本管理
+- **合同类型管理**：合同类型分类管理
+- **待办提示**：侧边栏菜单红点提示待办事项
 
 ## 技术栈
 
@@ -355,6 +360,8 @@ curl -X PUT http://localhost:8000/api/auth/users/1 \
 | DELETE | /api/customers/:customer_id | 删除客户 |
 | GET | /api/contract-types | 获取合同类型列表 |
 | POST | /api/contract-types | 创建合同类型 |
+| PUT | /api/contract-types/:type_id | 更新合同类型 |
+| DELETE | /api/contract-types/:type_id | 删除合同类型 |
 
 请求示例：
 
@@ -381,12 +388,34 @@ curl -X POST http://localhost:8000/api/customers \
 | GET | /api/contracts/:contract_id | 获取合同详情 |
 | POST | /api/contracts | 创建合同 |
 | PUT | /api/contracts/:contract_id | 更新合同 |
+| PUT | /api/contracts/:contract_id/status | 直接更新合同状态 |
+| POST | /api/contracts/:contract_id/status-change | 申请状态变更（需要审批的状态） |
+| GET | /api/contracts/:contract_id/status-change | 获取状态变更申请记录 |
 | DELETE | /api/contracts/:contract_id | 删除合同 |
+| GET | /api/contracts/:contract_id/lifecycle | 获取合同生命周期记录 |
 | GET | /api/contracts/:contract_id/executions | 获取执行记录 |
 | POST | /api/contracts/:contract_id/executions | 创建执行记录 |
+| DELETE | /api/executions/:execution_id | 删除执行记录 |
 | GET | /api/contracts/:contract_id/documents | 获取文档列表 |
 | POST | /api/contracts/:contract_id/documents | 上传文档 |
 | DELETE | /api/documents/:document_id | 删除文档 |
+
+**合同状态说明：**
+- `draft` - 草稿
+- `pending` - 待审批
+- `approved` - 已批准
+- `active` - 已生效
+- `in_progress` - 执行中
+- `pending_pay` - 待付款
+- `completed` - 已完成
+- `terminated` - 已终止
+- `archived` - 已归档
+
+**需要审批的状态变更：**
+- `archived` (归档)
+- `terminated` (终止)
+- `in_progress` (执行中)
+- `pending_pay` (待付款)
 
 请求示例：
 
@@ -407,6 +436,34 @@ curl -X POST http://localhost:8000/api/contracts \
     "start_date": "2024-01-01",
     "end_date": "2024-12-31"
   }'
+
+# 申请状态变更（需要审批的状态）
+curl -X POST http://localhost:8000/api/contracts/1/status-change \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "to_status": "archived",
+    "reason": "合同已完成，申请归档"
+  }'
+
+# 响应示例（需要审批时）：
+{
+  "direct": false,
+  "request": {
+    "id": 1,
+    "contract_id": 1,
+    "from_status": "completed",
+    "to_status": "archived",
+    "reason": "合同已完成，申请归档",
+    "status": "pending"
+  }
+}
+
+# 响应示例（直接变更时）：
+{
+  "direct": true,
+  "contract": { ... }
+}
 ```
 
 #### 审批管理
@@ -416,6 +473,33 @@ curl -X POST http://localhost:8000/api/contracts \
 | GET | /api/contracts/:contract_id/approvals | 获取审批记录 |
 | POST | /api/contracts/:contract_id/approvals | 创建审批记录 |
 | PUT | /api/approvals/:approval_id | 更新审批状态 |
+| GET | /api/pending-approvals | 获取待审批列表 |
+| GET | /api/pending-status-changes | 获取待审批状态变更列表 |
+| POST | /api/status-change-requests/:request_id/approve | 审批通过状态变更 |
+| POST | /api/status-change-requests/:request_id/reject | 拒绝状态变更 |
+| GET | /api/notifications/count | 获取待办事项数量 |
+
+**通知数量返回字段：**
+- `pendingApprovals` - 待审批合同数量
+- `pendingStatusChanges` - 待审批状态变更数量
+- `expiringContracts` - 即将到期合同数量
+- `total` - 总计
+
+#### 生命周期事件类型
+
+| 事件类型 | 说明 |
+|----------|------|
+| created | 合同创建 |
+| submitted | 提交审批 |
+| approved | 审批通过 |
+| rejected | 审批拒绝 |
+| activated | 合同生效 |
+| progress | 执行进度更新 |
+| payment | 付款记录 |
+| completed | 合同完成 |
+| terminated | 合同终止 |
+| archived | 合同归档 |
+| status_changed | 状态变更 |
 
 请求示例：
 
@@ -458,16 +542,18 @@ AnXin_Contract_Manage/
 ├── handlers/                  # HTTP 处理器
 │   ├── auth.go                # 认证相关（登录、注册、用户管理）
 │   ├── customer.go            # 客户管理
-│   ├── contract.go            # 合同管理
+│   ├── contract.go            # 合同管理（含生命周期、状态变更）
 │   └── approval.go            # 审批与提醒
 ├── middleware/                # 中间件
-│   └── auth.go                # JWT 认证中间件
+│   ├── auth.go                # JWT 认证中间件
+│   ├── security.go            # 安全中间件
+│   └── validator.go           # 输入验证中间件
 ├── models/                    # 数据模型
-│   └── models.go              # GORM 模型定义
+│   └── models.go              # GORM 模型定义（含生命周期、状态变更请求）
 ├── services/                  # 业务逻辑层
 │   ├── user_service.go        # 用户服务
-│   ├── customer_service.go     # 客户服务
-│   ├── contract_service.go    # 合同服务
+│   ├── customer_service.go    # 客户服务
+│   ├── contract_service.go    # 合同服务（含生命周期、归档、状态变更）
 │   └── approval_service.go    # 审批服务
 ├── frontend/                  # 前端项目
 │   ├── src/
@@ -477,6 +563,16 @@ AnXin_Contract_Manage/
 │   │   ├── store/             # 状态管理
 │   │   ├── utils/             # 工具函数
 │   │   └── views/             # 页面组件
+│   │       ├── Login.vue      # 登录页面
+│   │       ├── Register.vue   # 注册页面
+│   │       ├── Layout.vue     # 布局组件（含待办提示）
+│   │       ├── Dashboard.vue  # 仪表盘
+│   │       ├── Contract.vue   # 合同管理
+│   │       ├── ContractDetail.vue  # 合同详情（含生命周期）
+│   │       ├── Customer.vue   # 客户管理
+│   │       ├── User.vue       # 用户管理
+│   │       ├── Approval.vue   # 审批管理
+│   │       └── Reminder.vue   # 到期提醒
 │   ├── package.json
 │   └── vite.config.js
 ├── main.go                    # 后端入口文件
@@ -496,12 +592,13 @@ AnXin_Contract_Manage/
 |------|------|------|
 | 登录 | Login.vue | 用户登录，验证用户名密码，保存 Token |
 | 注册 | Register.vue | 用户注册，填写基本信息 |
-| 布局 | Layout.vue | 主框架布局，包含侧边栏导航和顶部栏 |
+| 布局 | Layout.vue | 主框架布局，包含侧边栏导航和顶部栏，支持待办事项红点提示 |
 | 仪表盘 | Dashboard.vue | 数据统计、图表展示、即将到期合同 |
 | 合同管理 | Contract.vue | 合同增删改查、状态管理 |
-| 客户管理 | Customer.vue | 客户/供应商信息管理 |
-| 用户管理 | User.vue | 用户信息管理、角色分配 |
-| 审批管理 | Approval.vue | 合同审批流程、审批历史 |
+| 合同详情 | ContractDetail.vue | 合同详细信息，包含执行跟踪、文档管理、审批记录、生命周期时间线、状态变更、归档操作 |
+| 客户管理 | Customer.vue | 客户/供应商信息管理，包含合同类型管理 |
+| 用户管理 | User.vue | 用户信息管理、角色分配、用户注册 |
+| 审批管理 | Approval.vue | 合同审批流程、审批历史、状态变更审批 |
 | 到期提醒 | Reminder.vue | 合同到期提醒管理 |
 
 ## 环境变量

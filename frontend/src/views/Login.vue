@@ -143,7 +143,7 @@ const handleLogin = async () => {
       try {
         const res = await login(loginForm)
         userStore.setToken(res.access_token)
-        userStore.setUserInfo({ username: loginForm.username })
+        userStore.setUserInfo(res.user_info || { username: loginForm.username, role: 'user' })
         ElMessage.success({ message: '欢迎回来！', duration: 2000 })
         router.push('/')
       } catch (error) {

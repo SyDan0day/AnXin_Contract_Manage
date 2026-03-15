@@ -33,6 +33,12 @@ const routes = [
         meta: { title: '合同管理', icon: 'Document' }
       },
       {
+        path: 'contracts/:id',
+        name: 'ContractDetail',
+        component: () => import('@/views/ContractDetail.vue'),
+        meta: { title: '合同详情', hidden: true }
+      },
+      {
         path: 'customers',
         name: 'Customers',
         component: () => import('@/views/Customer.vue'),

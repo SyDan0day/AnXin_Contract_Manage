@@ -166,3 +166,25 @@ func (s *CustomerService) CreateContractType(input ContractTypeCreateInput) (*mo
 	}
 	return &contractType, nil
 }
+
+func (s *CustomerService) UpdateContractType(id uint, input ContractTypeCreateInput) (*models.ContractType, error) {
+	var contractType models.ContractType
+	if err := models.DB.First(&contractType, id).Error; err != nil {
+		return nil, err
+	}
+
+	updates := map[string]interface{}{
+		"name":        input.Name,
+		"code":        input.Code,
+		"description": input.Description,
+	}
+
+	if err := models.DB.Model(&contractType).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+	return &contractType, nil
+}
+
+func (s *CustomerService) DeleteContractType(id uint) error {
+	return models.DB.Delete(&models.ContractType{}, id).Error
+}

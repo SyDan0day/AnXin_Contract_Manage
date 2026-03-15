@@ -22,7 +22,7 @@
       <div class="benefits-list">
         <div class="benefit-item">
           <div class="benefit-icon">
-            <el-icon><Shield /></el-icon>
+            <el-icon><CircleCheck /></el-icon>
           </div>
           <div class="benefit-text">
             <h3>安全可靠</h3>
@@ -31,7 +31,7 @@
         </div>
         <div class="benefit-item">
           <div class="benefit-icon">
-            <el-icon><TrendCharts /></el-icon>
+            <el-icon><DataLine /></el-icon>
           </div>
           <div class="benefit-text">
             <h3>高效管理</h3>
@@ -149,7 +149,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { 
   User, UserFilled, Message, Phone, Lock, Plus,
-  Shield, TrendCharts, Connection 
+  CircleCheck, DataLine, Connection 
 } from '@element-plus/icons-vue'
 import { register } from '@/api/auth'
 

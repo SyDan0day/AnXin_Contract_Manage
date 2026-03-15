@@ -41,8 +41,16 @@
             <el-tag :type="getStatusType(row.status)">{{ getStatusText(row.status) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="sign_date" label="签约日期" width="120" />
-        <el-table-column prop="end_date" label="到期日期" width="120" />
+        <el-table-column prop="sign_date" label="签约日期" width="120">
+          <template #default="{ row }">
+            {{ formatDate(row.sign_date) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="end_date" label="到期日期" width="120">
+          <template #default="{ row }">
+            {{ formatDate(row.end_date) }}
+          </template>
+        </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
@@ -150,12 +158,15 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getContractList, createContract, updateContract, deleteContract } from '@/api/contract'
+import { getContractList, getContractDetail, createContract, updateContract, deleteContract } from '@/api/contract'
 import { getCustomerList } from '@/api/customer'
 import { getContractTypeList } from '@/api/customer'
 
+const route = useRoute()
+const router = useRouter()
 const loading = ref(false)
 const dialogVisible = ref(false)
 const dialogTitle = ref('')
@@ -191,6 +202,16 @@ const formRules = {
   title: [{ required: true, message: '请输入合同标题', trigger: 'blur' }],
   customer_id: [{ required: true, message: '请选择客户', trigger: 'change' }],
   contract_type_id: [{ required: true, message: '请选择合同类型', trigger: 'change' }]
+}
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return dateStr
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 const getStatusType = (status) => {
@@ -253,7 +274,7 @@ const handleEdit = (row) => {
 }
 
 const handleView = (row) => {
-  console.log('查看详情', row)
+  router.push(`/contracts/${row.id}`)
 }
 
 const handleDelete = async (row) => {
@@ -308,10 +329,20 @@ const handleDialogClose = () => {
   })
 }
 
-onMounted(() => {
+onMounted(async () => {
   loadData()
   loadCustomers()
   loadContractTypes()
+  
+  if (route.query.action === 'create') {
+    handleAdd()
+    window.history.replaceState({}, '', '/contracts')
+  } else if (route.query.action === 'edit' && route.query.id) {
+    const id = parseInt(route.query.id)
+    const data = await getContractDetail(id)
+    handleEdit(data)
+    window.history.replaceState({}, '', '/contracts')
+  }
 })
 </script>
 

@@ -6,7 +6,7 @@
         <p class="page-desc">欢迎回来，{{ userStore.userInfo?.username }}！</p>
       </div>
       <div class="header-actions">
-        <el-button type="primary" :icon="Plus">新建合同</el-button>
+        <el-button type="primary" :icon="Plus" @click="createContract">新建合同</el-button>
       </div>
     </div>
     
@@ -128,7 +128,7 @@
             <el-table-column prop="end_date" label="到期日期" width="120">
               <template #default="{ row }">
                 <span :class="{ 'text-danger': isExpiringSoon(row.end_date) }">
-                  {{ row.end_date }}
+                  {{ formatDate(row.end_date) }}
                 </span>
               </template>
             </el-table-column>
@@ -205,6 +205,16 @@ const statsCards = computed(() => [
 const formatAmount = (value) => {
   if (!value) return '0.00'
   return Number(value).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return dateStr
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
 const isExpiringSoon = (date) => {
@@ -297,6 +307,10 @@ const getBarOption = () => ({
 
 const viewContract = (row) => {
   router.push(`/contracts/${row.id}`)
+}
+
+const createContract = () => {
+  router.push('/contracts?action=create')
 }
 
 onMounted(async () => {
