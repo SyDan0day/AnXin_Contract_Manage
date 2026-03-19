@@ -1,0 +1,639 @@
+
+2026/03/19 01:02:57 [32m/root/AnXin_Contract_Manage_v1/models/models.go:306 [33mSLOW SQL >= 200ms
+[0m[31;1m[792.316ms] [33m[rows:0][35m ALTER TABLE `users` MODIFY COLUMN `is_active` boolean DEFAULT true[0m
+管理员 admin 已存在
+审计管理员 auditadmin 已存在
+[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.
+
+[GIN-debug] [WARNING] Running in "debug" mode. Switch to "release" mode in production.
+ - using env:	export GIN_MODE=release
+ - using code:	gin.SetMode(gin.ReleaseMode)
+
+[GIN-debug] GET    /                         --> main.main.func1 (9 handlers)
+[GIN-debug] GET    /health                   --> main.main.func2 (9 handlers)
+[GIN-debug] GET    /uploads/*filepath        --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (9 handlers)
+[GIN-debug] HEAD   /uploads/*filepath        --> github.com/gin-gonic/gin.(*RouterGroup).createStaticHandler.func1 (9 handlers)
+[GIN-debug] POST   /api/auth/register        --> contract-manage/handlers.(*AuthHandler).Register-fm (10 handlers)
+[GIN-debug] POST   /api/auth/login           --> contract-manage/handlers.(*AuthHandler).Login-fm (10 handlers)
+[GIN-debug] GET    /api/auth/users           --> contract-manage/handlers.(*AuthHandler).GetUsers-fm (11 handlers)
+[GIN-debug] GET    /api/auth/users/:user_id  --> contract-manage/handlers.(*AuthHandler).GetUserByID-fm (11 handlers)
+[GIN-debug] PUT    /api/auth/users/:user_id  --> contract-manage/handlers.(*AuthHandler).UpdateUser-fm (11 handlers)
+[GIN-debug] DELETE /api/auth/users/:user_id  --> contract-manage/handlers.(*AuthHandler).DeleteUser-fm (11 handlers)
+[GIN-debug] GET    /api/customers            --> contract-manage/handlers.(*CustomerHandler).GetCustomers-fm (11 handlers)
+[GIN-debug] GET    /api/customers/:customer_id --> contract-manage/handlers.(*CustomerHandler).GetCustomerByID-fm (11 handlers)
+[GIN-debug] POST   /api/customers            --> contract-manage/handlers.(*CustomerHandler).CreateCustomer-fm (11 handlers)
+[GIN-debug] PUT    /api/customers/:customer_id --> contract-manage/handlers.(*CustomerHandler).UpdateCustomer-fm (11 handlers)
+[GIN-debug] DELETE /api/customers/:customer_id --> contract-manage/handlers.(*CustomerHandler).DeleteCustomer-fm (11 handlers)
+[GIN-debug] GET    /api/contract-types       --> contract-manage/handlers.(*CustomerHandler).GetContractTypes-fm (11 handlers)
+[GIN-debug] POST   /api/contract-types       --> contract-manage/handlers.(*CustomerHandler).CreateContractType-fm (11 handlers)
+[GIN-debug] PUT    /api/contract-types/:type_id --> contract-manage/handlers.(*CustomerHandler).UpdateContractType-fm (11 handlers)
+[GIN-debug] DELETE /api/contract-types/:type_id --> contract-manage/handlers.(*CustomerHandler).DeleteContractType-fm (11 handlers)
+[GIN-debug] GET    /api/contracts            --> contract-manage/handlers.(*ContractHandler).GetContracts-fm (11 handlers)
+[GIN-debug] POST   /api/contracts            --> contract-manage/handlers.(*ContractHandler).CreateContract-fm (11 handlers)
+[GIN-debug] GET    /api/contracts/:contract_id --> contract-manage/handlers.(*ContractHandler).GetContractByID-fm (11 handlers)
+[GIN-debug] PUT    /api/contracts/:contract_id --> contract-manage/handlers.(*ContractHandler).UpdateContract-fm (11 handlers)
+[GIN-debug] PUT    /api/contracts/:contract_id/status --> contract-manage/handlers.(*ContractHandler).UpdateContractStatus-fm (11 handlers)
+[GIN-debug] POST   /api/contracts/:contract_id/status-change --> contract-manage/handlers.(*ContractHandler).CreateStatusChangeRequest-fm (11 handlers)
+[GIN-debug] GET    /api/contracts/:contract_id/status-change --> contract-manage/handlers.(*ContractHandler).GetStatusChangeRequests-fm (11 handlers)
+[GIN-debug] POST   /api/contracts/:contract_id/archive --> contract-manage/handlers.(*ContractHandler).ArchiveContract-fm (11 handlers)
+[GIN-debug] DELETE /api/contracts/:contract_id --> contract-manage/handlers.(*ContractHandler).DeleteContract-fm (11 handlers)
+[GIN-debug] GET    /api/contracts/:contract_id/lifecycle --> contract-manage/handlers.(*ContractHandler).GetContractLifecycle-fm (11 handlers)
+[GIN-debug] GET    /api/contracts/:contract_id/executions --> contract-manage/handlers.(*ContractHandler).GetContractExecutions-fm (11 handlers)
+[GIN-debug] POST   /api/contracts/:contract_id/executions --> contract-manage/handlers.(*ContractHandler).CreateContractExecution-fm (11 handlers)
+[GIN-debug] DELETE /api/executions/:execution_id --> contract-manage/handlers.(*ContractHandler).DeleteExecution-fm (11 handlers)
+[GIN-debug] GET    /api/contracts/:contract_id/documents --> contract-manage/handlers.(*ContractHandler).GetContractDocuments-fm (11 handlers)
+[GIN-debug] POST   /api/contracts/:contract_id/documents --> contract-manage/handlers.(*ContractHandler).CreateContractDocument-fm (11 handlers)
+[GIN-debug] GET    /api/documents/:document_id/preview --> contract-manage/handlers.(*ContractHandler).PreviewDocument-fm (11 handlers)
+[GIN-debug] DELETE /api/documents/:document_id --> contract-manage/handlers.(*ContractHandler).DeleteDocument-fm (11 handlers)
+[GIN-debug] GET    /api/contracts/:contract_id/approvals --> contract-manage/handlers.(*ApprovalHandler).GetContractApprovals-fm (11 handlers)
+[GIN-debug] POST   /api/contracts/:contract_id/approvals --> contract-manage/handlers.(*ApprovalHandler).CreateApproval-fm (11 handlers)
+[GIN-debug] PUT    /api/approvals/:approval_id --> contract-manage/handlers.(*ApprovalHandler).UpdateApproval-fm (11 handlers)
+[GIN-debug] GET    /api/pending-approvals    --> contract-manage/handlers.(*ApprovalHandler).GetPendingApprovals-fm (11 handlers)
+[GIN-debug] GET    /api/pending-status-changes --> contract-manage/handlers.(*ContractHandler).GetPendingStatusChangeApprovals-fm (11 handlers)
+[GIN-debug] POST   /api/status-change-requests/:request_id/approve --> contract-manage/handlers.(*ContractHandler).ApproveStatusChangeRequest-fm (11 handlers)
+[GIN-debug] POST   /api/status-change-requests/:request_id/reject --> contract-manage/handlers.(*ContractHandler).RejectStatusChangeRequest-fm (11 handlers)
+[GIN-debug] GET    /api/contracts/:contract_id/reminders --> contract-manage/handlers.(*ApprovalHandler).GetContractReminders-fm (11 handlers)
+[GIN-debug] POST   /api/contracts/:contract_id/reminders --> contract-manage/handlers.(*ApprovalHandler).CreateReminder-fm (11 handlers)
+[GIN-debug] POST   /api/reminders/:reminder_id/send --> contract-manage/handlers.(*ApprovalHandler).SendReminder-fm (11 handlers)
+[GIN-debug] GET    /api/expiring-contracts   --> contract-manage/handlers.(*ApprovalHandler).GetExpiringContracts-fm (11 handlers)
+[GIN-debug] GET    /api/statistics           --> contract-manage/handlers.(*ApprovalHandler).GetStatistics-fm (11 handlers)
+[GIN-debug] GET    /api/notifications/count  --> contract-manage/handlers.(*ApprovalHandler).GetNotificationCounts-fm (11 handlers)
+[GIN-debug] GET    /api/audit-logs           --> contract-manage/handlers.(*AuditHandler).GetAuditLogs-fm (11 handlers)
+[GIN-debug] DELETE /api/audit-logs/:id       --> contract-manage/handlers.(*AuditHandler).DeleteAuditLog-fm (11 handlers)
+[GIN-debug] POST   /api/audit-logs/batch-delete --> contract-manage/handlers.(*AuditHandler).DeleteAuditLogs-fm (11 handlers)
+[GIN-debug] GET    /api/audit-logs/export    --> contract-manage/handlers.(*AuditHandler).ExportAuditLogs-fm (11 handlers)
+API 调试页面: http://localhost:8000
+[GIN-debug] [WARNING] You trusted all proxies, this is NOT safe. We recommend you to set a value.
+Please check https://pkg.go.dev/github.com/gin-gonic/gin#readme-don-t-trust-all-proxies for details.
+[GIN-debug] Listening and serving HTTP on :8000
+[GIN] 2026/03/19 - 01:02:59 | 200 |     102.472µs |             ::1 | GET      "/health"
+[GIN] 2026/03/19 - 01:02:59 | 200 |      189.73µs |             ::1 | GET      "/health"
+[GIN] 2026/03/19 - 01:03:04 | 200 |   10.881517ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:03:04 | 200 |   10.999737ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:03:23 | 200 |    5.624604ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:03:23 | 200 |    5.710105ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:03:35 | 200 |   10.044333ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:03:35 | 200 |   10.153747ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:03:55 | 200 |    4.005259ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:03:55 | 200 |    4.073534ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:03:57 | 200 |   11.437313ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:03:57 | 200 |   11.533728ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:03:57 | 200 |   58.159875ms |    39.172.5.163 | GET      "/api/contracts/1"
+[GIN] 2026/03/19 - 01:03:57 | 200 |   58.215747ms |    39.172.5.163 | GET      "/api/contracts/1"
+[GIN] 2026/03/19 - 01:03:57 | 200 |   11.757835ms |    39.172.5.163 | GET      "/api/contracts/1/approvals"
+[GIN] 2026/03/19 - 01:03:57 | 200 |   11.896751ms |    39.172.5.163 | GET      "/api/contracts/1/approvals"
+[GIN] 2026/03/19 - 01:03:59 | 200 |    9.432082ms |    39.172.5.163 | GET      "/api/contracts/1/documents"
+[GIN] 2026/03/19 - 01:03:59 | 200 |    9.563024ms |    39.172.5.163 | GET      "/api/contracts/1/documents"
+[GIN] 2026/03/19 - 01:04:00 | 200 |    5.623196ms |    39.172.5.163 | GET      "/api/documents/5/preview"
+[GIN] 2026/03/19 - 01:04:00 | 200 |    5.706683ms |    39.172.5.163 | GET      "/api/documents/5/preview"
+[GIN] 2026/03/19 - 01:04:04 | 200 |    4.531016ms |    39.172.5.163 | GET      "/api/documents/4/preview"
+[GIN] 2026/03/19 - 01:04:04 | 200 |    4.601936ms |    39.172.5.163 | GET      "/api/documents/4/preview"
+[GIN] 2026/03/19 - 01:04:05 | 200 |   11.702318ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:04:05 | 200 |   11.752717ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:04:09 | 200 |    7.575737ms |    39.172.5.163 | GET      "/api/contracts/1"
+[GIN] 2026/03/19 - 01:04:09 | 200 |    7.673593ms |    39.172.5.163 | GET      "/api/contracts/1"
+[GIN] 2026/03/19 - 01:04:09 | 200 |   10.887516ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:04:09 | 200 |   11.125637ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:04:09 | 200 |    1.431616ms |    39.172.5.163 | GET      "/api/contracts/1/approvals"
+[GIN] 2026/03/19 - 01:04:09 | 200 |    1.497411ms |    39.172.5.163 | GET      "/api/contracts/1/approvals"
+[GIN] 2026/03/19 - 01:04:10 | 200 |    3.970756ms |    39.172.5.163 | GET      "/"
+[GIN] 2026/03/19 - 01:04:10 | 200 |    4.038949ms |    39.172.5.163 | GET      "/"
+[GIN] 2026/03/19 - 01:04:11 | 404 |      12.155µs |    39.172.5.163 | GET      "/favicon.ico"
+[GIN] 2026/03/19 - 01:04:11 | 404 |      43.477µs |    39.172.5.163 | GET      "/favicon.ico"
+[GIN] 2026/03/19 - 01:04:14 | 200 |    3.630412ms |    39.172.5.163 | GET      "/api/contracts/1/documents"
+[GIN] 2026/03/19 - 01:04:14 | 200 |    3.717205ms |    39.172.5.163 | GET      "/api/contracts/1/documents"
+[GIN] 2026/03/19 - 01:04:16 | 200 |     5.64639ms |    39.172.5.163 | GET      "/api/documents/4/preview"
+[GIN] 2026/03/19 - 01:04:16 | 200 |    5.737958ms |    39.172.5.163 | GET      "/api/documents/4/preview"
+[GIN] 2026/03/19 - 01:04:32 | 200 |    5.237996ms |    39.172.5.163 | GET      "/api/documents/4/preview"
+[GIN] 2026/03/19 - 01:04:32 | 200 |    7.243178ms |    39.172.5.163 | GET      "/api/documents/4/preview"
+[GIN] 2026/03/19 - 01:04:35 | 401 |     873.104µs |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:04:35 | 401 |     932.434µs |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:04:39 | 200 |   12.390135ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:04:39 | 200 |   12.499844ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:05:09 | 200 |    4.683517ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:05:09 | 200 |    4.810792ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:05:39 | 200 |   10.011237ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:05:39 | 200 |   10.118844ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:06:09 | 200 |   48.935862ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:06:09 | 200 |   49.524266ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:06:39 | 200 |  202.114966ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:06:39 | 200 |  202.621179ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:07:09 | 200 |    5.856538ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:07:09 | 200 |    5.900468ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:07:39 | 200 |   39.573189ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:07:39 | 200 |   39.691162ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:08:23 | 200 |   79.051509ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:08:23 | 200 |   81.786818ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:09:23 | 200 |  244.741669ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:09:23 | 200 |  246.270559ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:09:35 | 200 |    6.261639ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:09:35 | 200 |    6.357437ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:09:35 | 200 |   79.180121ms |    39.172.5.163 | GET      "/api/contracts/1"
+[GIN] 2026/03/19 - 01:09:35 | 200 |   79.291169ms |    39.172.5.163 | GET      "/api/contracts/1"
+[GIN] 2026/03/19 - 01:09:35 | 200 |   17.198433ms |    39.172.5.163 | GET      "/api/contracts/1/approvals"
+[GIN] 2026/03/19 - 01:09:35 | 200 |   17.281546ms |    39.172.5.163 | GET      "/api/contracts/1/approvals"
+[GIN] 2026/03/19 - 01:09:36 | 200 |   14.889525ms |    39.172.5.163 | GET      "/api/contracts/1/documents"
+[GIN] 2026/03/19 - 01:09:36 | 200 |   14.952899ms |    39.172.5.163 | GET      "/api/contracts/1/documents"
+[GIN] 2026/03/19 - 01:09:38 | 200 |    6.540886ms |    39.172.5.163 | GET      "/api/documents/4/preview"
+[GIN] 2026/03/19 - 01:09:38 | 200 |    6.646442ms |    39.172.5.163 | GET      "/api/documents/4/preview"
+[GIN] 2026/03/19 - 01:09:49 | 200 |   68.208856ms |    39.172.5.163 | GET      "/api/audit-logs?page=1&page_size=20"
+[GIN] 2026/03/19 - 01:09:49 | 200 |   68.323316ms |    39.172.5.163 | GET      "/api/audit-logs?page=1&page_size=20"
+[GIN] 2026/03/19 - 01:10:05 | 200 |  113.149249ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:10:05 | 200 |  113.923963ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:10:17 | 200 |   51.370044ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:10:17 | 200 |   51.424378ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:10:17 | 200 |  130.598056ms |    39.172.5.163 | GET      "/api/audit-logs?page=1&page_size=20"
+[GIN] 2026/03/19 - 01:10:17 | 200 |  130.699769ms |    39.172.5.163 | GET      "/api/audit-logs?page=1&page_size=20"
+[GIN] 2026/03/19 - 01:10:29 | 401 |   98.538477ms |    39.172.5.163 | POST     "/api/auth/login"
+[GIN] 2026/03/19 - 01:10:29 | 401 |   98.578979ms |    39.172.5.163 | POST     "/api/auth/login"
+[GIN] 2026/03/19 - 01:10:37 | 200 |   91.328004ms |    39.172.5.163 | POST     "/api/auth/login"
+[GIN] 2026/03/19 - 01:10:37 | 200 |   91.365112ms |    39.172.5.163 | POST     "/api/auth/login"
+[GIN] 2026/03/19 - 01:10:37 | 200 |   20.771803ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:10:37 | 200 |   20.868955ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:10:37 | 200 |   25.463463ms |    39.172.5.163 | GET      "/api/statistics"
+[GIN] 2026/03/19 - 01:10:37 | 200 |   25.538188ms |    39.172.5.163 | GET      "/api/statistics"
+[GIN] 2026/03/19 - 01:10:37 | 200 |    3.876804ms |    39.172.5.163 | GET      "/api/expiring-contracts?days=30"
+[GIN] 2026/03/19 - 01:10:37 | 200 |    3.933969ms |    39.172.5.163 | GET      "/api/expiring-contracts?days=30"
+[GIN] 2026/03/19 - 01:10:40 | 200 |   11.484374ms |    39.172.5.163 | GET      "/api/customers?skip=0&limit=10&name=&type="
+[GIN] 2026/03/19 - 01:10:40 | 200 |   11.623256ms |    39.172.5.163 | GET      "/api/customers?skip=0&limit=10&name=&type="
+[GIN] 2026/03/19 - 01:10:40 | 200 |   15.220703ms |    39.172.5.163 | GET      "/api/contract-types?limit=1000"
+[GIN] 2026/03/19 - 01:10:40 | 200 |    15.30697ms |    39.172.5.163 | GET      "/api/contract-types?limit=1000"
+[GIN] 2026/03/19 - 01:10:41 | 200 |   31.711003ms |    39.172.5.163 | GET      "/api/contracts?skip=0&limit=10&title=&status="
+[GIN] 2026/03/19 - 01:10:41 | 200 |   31.851586ms |    39.172.5.163 | GET      "/api/contracts?skip=0&limit=10&title=&status="
+
+2026/03/19 01:10:41 [32m/root/AnXin_Contract_Manage_v1/services/customer_service.go:38 [33mSLOW SQL >= 200ms
+[0m[31;1m[341.374ms] [33m[rows:1][35m SELECT * FROM `customers` LIMIT 1000[0m
+[GIN] 2026/03/19 - 01:10:41 | 200 |  342.593087ms |    39.172.5.163 | GET      "/api/customers?limit=1000"
+[GIN] 2026/03/19 - 01:10:41 | 200 |  342.624358ms |    39.172.5.163 | GET      "/api/customers?limit=1000"
+[GIN] 2026/03/19 - 01:10:43 | 200 |   11.110739ms |    39.172.5.163 | GET      "/api/contracts/1"
+[GIN] 2026/03/19 - 01:10:43 | 200 |   11.249387ms |    39.172.5.163 | GET      "/api/contracts/1"
+[GIN] 2026/03/19 - 01:10:43 | 200 |   10.109431ms |    39.172.5.163 | GET      "/api/contracts/1/approvals"
+[GIN] 2026/03/19 - 01:10:43 | 200 |    10.20492ms |    39.172.5.163 | GET      "/api/contracts/1/approvals"
+[GIN] 2026/03/19 - 01:10:44 | 200 |   12.728729ms |    39.172.5.163 | GET      "/api/contracts/1/documents"
+[GIN] 2026/03/19 - 01:10:44 | 200 |    12.82201ms |    39.172.5.163 | GET      "/api/contracts/1/documents"
+[GIN] 2026/03/19 - 01:10:46 | 200 |    9.814527ms |    39.172.5.163 | GET      "/api/documents/4/preview"
+[GIN] 2026/03/19 - 01:10:46 | 200 |    9.894512ms |    39.172.5.163 | GET      "/api/documents/4/preview"
+[GIN] 2026/03/19 - 01:10:49 | 200 |    3.079343ms |    39.172.5.163 | GET      "/api/documents/5/preview"
+[GIN] 2026/03/19 - 01:10:49 | 200 |    3.157936ms |    39.172.5.163 | GET      "/api/documents/5/preview"
+[GIN] 2026/03/19 - 01:11:08 | 200 |   14.297736ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:11:08 | 200 |   14.396609ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:11:38 | 200 |  122.223204ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:11:38 | 200 |   123.37143ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:12:08 | 200 |     3.86253ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:12:08 | 200 |    3.917976ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:12:38 | 200 |     8.39502ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:12:38 | 200 |    8.439458ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:13:08 | 200 |    4.418252ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:13:08 | 200 |      4.5235ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:13:38 | 200 |    4.850263ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:13:38 | 200 |    4.967397ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:14:08 | 200 |   18.600161ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:14:08 | 200 |   18.772606ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:14:10 | 200 |   42.934511ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:14:10 | 200 |   43.051339ms |    39.172.5.163 | GET      "/api/notifications/count"
+
+2026/03/19 01:14:10 [32m/root/AnXin_Contract_Manage_v1/services/contract_service.go:82 [33mSLOW SQL >= 200ms
+[0m[31;1m[497.968ms] [33m[rows:1][35m SELECT * FROM `contracts` WHERE `contracts`.`id` = 1 ORDER BY `contracts`.`id` LIMIT 1[0m
+[GIN] 2026/03/19 - 01:14:10 | 200 |  504.459935ms |    39.172.5.163 | GET      "/api/contracts/1"
+[GIN] 2026/03/19 - 01:14:10 | 200 |  504.555694ms |    39.172.5.163 | GET      "/api/contracts/1"
+[GIN] 2026/03/19 - 01:14:10 | 200 |   52.708458ms |    39.172.5.163 | GET      "/api/contracts/1/approvals"
+[GIN] 2026/03/19 - 01:14:10 | 200 |   52.875288ms |    39.172.5.163 | GET      "/api/contracts/1/approvals"
+[GIN] 2026/03/19 - 01:14:11 | 200 |  113.976132ms |    39.172.5.163 | GET      "/api/contracts/1/documents"
+[GIN] 2026/03/19 - 01:14:11 | 200 |  114.081306ms |    39.172.5.163 | GET      "/api/contracts/1/documents"
+[GIN] 2026/03/19 - 01:14:13 | 200 |   99.448299ms |    39.172.5.163 | GET      "/api/documents/4/preview"
+[GIN] 2026/03/19 - 01:14:13 | 200 |   99.747606ms |    39.172.5.163 | GET      "/api/documents/4/preview"
+[GIN] 2026/03/19 - 01:14:17 | 200 |    5.668978ms |    39.172.5.163 | GET      "/api/auth/users?skip=0&limit=10"
+[GIN] 2026/03/19 - 01:14:17 | 200 |    5.838783ms |    39.172.5.163 | GET      "/api/auth/users?skip=0&limit=10"
+[GIN] 2026/03/19 - 01:14:40 | 200 |   20.132375ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:14:40 | 200 |   20.243284ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:15:10 | 200 |   44.287273ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:15:10 | 200 |   45.270559ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:15:40 | 200 |   39.577129ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:15:40 | 200 |   39.648872ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:16:10 | 200 |  137.626273ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:16:10 | 200 |  140.187172ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:16:40 | 200 |   17.819657ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:16:40 | 200 |   19.621889ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:17:11 | 200 |  297.050872ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:17:11 | 200 |  299.801048ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:17:40 | 200 |  105.464157ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:17:40 | 200 |  105.541822ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:18:23 | 200 |   46.342406ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:18:23 | 200 |   48.578217ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:18:32 | 200 |     308.414µs |             ::1 | GET      "/health"
+[GIN] 2026/03/19 - 01:18:32 | 200 |   10.813556ms |             ::1 | GET      "/health"
+[GIN] 2026/03/19 - 01:19:23 | 200 |  197.422252ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:19:23 | 200 |  198.418977ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:20:23 | 200 |    9.917738ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:20:23 | 200 |   10.101638ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:21:07 | 404 |    5.448218ms |   81.168.83.103 | GET      "/config.py.bak"
+[GIN] 2026/03/19 - 01:21:07 | 404 |    7.161447ms |   81.168.83.103 | GET      "/config.py.bak"
+[GIN] 2026/03/19 - 01:21:23 | 200 |    95.95477ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:21:23 | 200 |   96.122685ms |    39.172.5.163 | GET      "/api/notifications/count"
+
+2026/03/19 01:22:24 [32m/root/AnXin_Contract_Manage_v1/services/approval_service.go:157 [33mSLOW SQL >= 200ms
+[0m[31;1m[620.016ms] [33m[rows:0][35m SELECT * FROM `contracts` WHERE status = 'pending' ORDER BY created_at DESC[0m
+[GIN] 2026/03/19 - 01:22:24 | 200 |  821.736128ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:22:24 | 200 |  821.842367ms |    39.172.5.163 | GET      "/api/notifications/count"
+
+2026/03/19 01:22:24 [32m/root/AnXin_Contract_Manage_v1/services/audit_service.go:15 [33mSLOW SQL >= 200ms
+[0m[31;1m[325.462ms] [33m[rows:1][35m INSERT INTO `audit_logs` (`user_id`,`username`,`action`,`module`,`method`,`path`,`ip_address`,`user_agent`,`request`,`response`,`status_code`,`created_at`) VALUES (4,'admin','GET /api/notifications/count','other','GET','/api/notifications/count','39.172.5.163','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36','','',200,'2026-03-19 01:22:24.638')[0m
+[GIN] 2026/03/19 - 01:23:23 | 200 |  174.057059ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:23:23 | 200 |  175.826549ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:24:23 | 200 |   15.778998ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:24:23 | 200 |   15.943824ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:25:23 | 200 |  219.985256ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:25:23 | 200 |  223.972657ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:26:23 | 200 |    5.279132ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:26:23 | 200 |     5.38932ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:27:23 | 200 |    13.29134ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:27:23 | 200 |   16.817459ms |    39.172.5.163 | GET      "/api/notifications/count"
+
+2026/03/19 01:28:02 [32m/root/AnXin_Contract_Manage_v1/services/approval_service.go:157 [33mSLOW SQL >= 200ms
+[0m[31;1m[355.203ms] [33m[rows:0][35m SELECT * FROM `contracts` WHERE status = 'pending' ORDER BY created_at DESC[0m
+[GIN] 2026/03/19 - 01:28:03 | 200 |   438.08118ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:28:03 | 200 |  438.214249ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:28:05 | 200 |   16.907341ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:28:05 | 200 |   17.004468ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:28:05 | 200 |   89.279926ms |    39.172.5.163 | GET      "/api/auth/users?skip=0&limit=10"
+[GIN] 2026/03/19 - 01:28:05 | 200 |   89.397002ms |    39.172.5.163 | GET      "/api/auth/users?skip=0&limit=10"
+[GIN] 2026/03/19 - 01:28:06 | 200 |    4.963432ms |    39.172.5.163 | GET      "/"
+[GIN] 2026/03/19 - 01:28:06 | 200 |    5.108253ms |    39.172.5.163 | GET      "/"
+[GIN] 2026/03/19 - 01:28:10 | 200 |   12.255639ms |    39.172.5.163 | GET      "/api/contract-types?limit=1000"
+[GIN] 2026/03/19 - 01:28:10 | 200 |   12.353743ms |    39.172.5.163 | GET      "/api/contract-types?limit=1000"
+[GIN] 2026/03/19 - 01:28:10 | 200 |    62.21596ms |    39.172.5.163 | GET      "/api/contracts?skip=0&limit=10&title=&status="
+[GIN] 2026/03/19 - 01:28:10 | 200 |   62.338379ms |    39.172.5.163 | GET      "/api/contracts?skip=0&limit=10&title=&status="
+
+2026/03/19 01:28:10 [32m/root/AnXin_Contract_Manage_v1/services/customer_service.go:38 [33mSLOW SQL >= 200ms
+[0m[31;1m[201.056ms] [33m[rows:1][35m SELECT * FROM `customers` LIMIT 1000[0m
+[GIN] 2026/03/19 - 01:28:10 | 200 |    201.4258ms |    39.172.5.163 | GET      "/api/customers?limit=1000"
+[GIN] 2026/03/19 - 01:28:10 | 200 |  201.482413ms |    39.172.5.163 | GET      "/api/customers?limit=1000"
+[GIN] 2026/03/19 - 01:28:11 | 200 |    1.985677ms |    39.172.5.163 | GET      "/api/pending-approvals"
+[GIN] 2026/03/19 - 01:28:11 | 200 |    2.092322ms |    39.172.5.163 | GET      "/api/pending-approvals"
+[GIN] 2026/03/19 - 01:28:11 | 200 |    8.198987ms |    39.172.5.163 | GET      "/api/pending-status-changes"
+[GIN] 2026/03/19 - 01:28:11 | 200 |    8.311524ms |    39.172.5.163 | GET      "/api/pending-status-changes"
+[GIN] 2026/03/19 - 01:28:13 | 200 |    3.828066ms |    39.172.5.163 | GET      "/api/auth/users?skip=0&limit=10"
+[GIN] 2026/03/19 - 01:28:13 | 200 |    3.968119ms |    39.172.5.163 | GET      "/api/auth/users?skip=0&limit=10"
+
+2026/03/19 01:28:42 [32m/root/AnXin_Contract_Manage_v1/services/approval_service.go:157 [33mSLOW SQL >= 200ms
+[0m[31;1m[5248.288ms] [33m[rows:0][35m SELECT * FROM `contracts` WHERE status = 'pending' ORDER BY created_at DESC[0m
+[GIN] 2026/03/19 - 01:28:43 | 200 |  5.747911929s |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:28:43 | 200 |  5.748362359s |    39.172.5.163 | GET      "/api/notifications/count"
+
+2026/03/19 01:28:43 [32m/root/AnXin_Contract_Manage_v1/services/audit_service.go:15 [33mSLOW SQL >= 200ms
+[0m[31;1m[680.603ms] [33m[rows:1][35m INSERT INTO `audit_logs` (`user_id`,`username`,`action`,`module`,`method`,`path`,`ip_address`,`user_agent`,`request`,`response`,`status_code`,`created_at`) VALUES (4,'admin','GET /api/notifications/count','other','GET','/api/notifications/count','39.172.5.163','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36','','',200,'2026-03-19 01:28:43.109')[0m
+[GIN] 2026/03/19 - 01:29:06 | 200 |    5.686276ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:29:06 | 200 |    5.751265ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:29:36 | 200 |    5.282278ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:29:36 | 200 |    5.422332ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:30:06 | 200 |  182.287798ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:30:06 | 200 |  194.940145ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:30:36 | 200 |    7.387171ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:30:36 | 200 |    7.451005ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:31:06 | 200 |    6.991669ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:31:06 | 200 |    7.050176ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:31:36 | 200 |   68.831833ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:31:36 | 200 |    83.50851ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:32:06 | 200 |    8.295581ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:32:06 | 200 |    8.396457ms |    39.172.5.163 | GET      "/api/notifications/count"
+
+2026/03/19 01:32:36 [32m/root/AnXin_Contract_Manage_v1/services/approval_service.go:157 [33mSLOW SQL >= 200ms
+[0m[31;1m[217.976ms] [33m[rows:0][35m SELECT * FROM `contracts` WHERE status = 'pending' ORDER BY created_at DESC[0m
+[GIN] 2026/03/19 - 01:32:37 | 200 |  264.606941ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:32:37 | 200 |  264.663007ms |    39.172.5.163 | GET      "/api/notifications/count"
+
+2026/03/19 01:33:08 [32m/root/AnXin_Contract_Manage_v1/services/approval_service.go:157 [33mSLOW SQL >= 200ms
+[0m[31;1m[860.591ms] [33m[rows:0][35m SELECT * FROM `contracts` WHERE status = 'pending' ORDER BY created_at DESC[0m
+[GIN] 2026/03/19 - 01:33:08 | 200 |  1.386932489s |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:33:08 | 200 |  1.387075171s |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:34:07 | 200 |    10.11204ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:34:07 | 200 |   10.965198ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:35:08 | 200 |   191.94533ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:35:08 | 200 |  193.696987ms |    39.172.5.163 | GET      "/api/notifications/count"
+
+2026/03/19 01:36:11 [32m/root/AnXin_Contract_Manage_v1/services/approval_service.go:157 [33mSLOW SQL >= 200ms
+[0m[31;1m[692.498ms] [33m[rows:0][35m SELECT * FROM `contracts` WHERE status = 'pending' ORDER BY created_at DESC[0m
+[GIN] 2026/03/19 - 01:36:11 | 200 |   865.15963ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:36:11 | 200 |  865.228691ms |    39.172.5.163 | GET      "/api/notifications/count"
+
+2026/03/19 01:36:11 [32m/root/AnXin_Contract_Manage_v1/services/audit_service.go:15 [33mSLOW SQL >= 200ms
+[0m[31;1m[345.447ms] [33m[rows:1][35m INSERT INTO `audit_logs` (`user_id`,`username`,`action`,`module`,`method`,`path`,`ip_address`,`user_agent`,`request`,`response`,`status_code`,`created_at`) VALUES (4,'admin','GET /api/notifications/count','other','GET','/api/notifications/count','39.172.5.163','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36','','',200,'2026-03-19 01:36:11.169')[0m
+[GIN] 2026/03/19 - 01:37:10 | 200 |   39.802905ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:37:10 | 200 |    42.43688ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:38:11 | 200 |  135.874514ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:38:11 | 200 |  138.536271ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:39:12 | 200 |    4.753861ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:39:12 | 200 |    4.844395ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:40:13 | 200 |    5.367762ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:40:13 | 200 |    5.428153ms |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:41:14 | 401 |     193.974µs |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 01:41:14 | 401 |     257.833µs |    39.172.5.163 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 03:46:17 | 200 |    5.280019ms |  167.94.138.170 | GET      "/"
+[GIN] 2026/03/19 - 03:46:17 | 200 |    5.690027ms |  167.94.138.170 | GET      "/"
+[GIN] 2026/03/19 - 03:46:21 | 404 |     107.026µs |  167.94.138.170 | PRI      "*"
+[GIN] 2026/03/19 - 03:46:21 | 404 |     262.993µs |  167.94.138.170 | PRI      "*"
+[GIN] 2026/03/19 - 03:46:22 | 404 |      55.595µs |  167.94.138.170 | GET      "/favicon.ico"
+[GIN] 2026/03/19 - 03:46:22 | 404 |     100.405µs |  167.94.138.170 | GET      "/favicon.ico"
+[GIN] 2026/03/19 - 03:46:34 | 200 |     252.483µs |  167.94.138.170 | GET      "/"
+[GIN] 2026/03/19 - 03:46:34 | 200 |      303.53µs |  167.94.138.170 | GET      "/"
+[GIN] 2026/03/19 - 03:47:01 | 404 |      59.667µs |  167.94.138.170 | GET      "/login"
+[GIN] 2026/03/19 - 03:47:01 | 404 |      132.15µs |  167.94.138.170 | GET      "/login"
+[GIN] 2026/03/19 - 06:22:31 | 200 |      280.07µs |  205.210.31.143 | GET      "/"
+[GIN] 2026/03/19 - 06:22:31 | 200 |     327.531µs |  205.210.31.143 | GET      "/"
+[GIN] 2026/03/19 - 07:44:24 | 200 |     230.324µs |  198.235.24.175 | GET      "/"
+[GIN] 2026/03/19 - 07:44:24 | 200 |     340.057µs |  198.235.24.175 | GET      "/"
+[GIN] 2026/03/19 - 07:48:29 | 404 |      84.605µs | 194.163.183.223 | GET      "/api/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php"
+[GIN] 2026/03/19 - 07:48:29 | 404 |     144.683µs | 194.163.183.223 | GET      "/api/vendor/phpunit/phpunit/src/Util/PHP/eval-stdin.php"
+[GIN] 2026/03/19 - 07:52:24 | 404 |      52.583µs |   60.191.125.35 | HEAD     "/"
+[GIN] 2026/03/19 - 07:52:24 | 404 |     127.488µs |   60.191.125.35 | HEAD     "/"
+[GIN] 2026/03/19 - 08:54:21 | 404 |      46.518µs |   81.168.83.103 | GET      "/flowise.sqlite"
+[GIN] 2026/03/19 - 08:54:21 | 404 |     114.857µs |   81.168.83.103 | GET      "/flowise.sqlite"
+[GIN] 2026/03/19 - 09:23:48 | 200 |   86.627999ms | 125.118.197.206 | POST     "/api/auth/login"
+[GIN] 2026/03/19 - 09:23:48 | 200 |    86.75537ms | 125.118.197.206 | POST     "/api/auth/login"
+[GIN] 2026/03/19 - 09:24:03 | 200 |   22.211112ms | 125.118.197.206 | GET      "/api/statistics"
+[GIN] 2026/03/19 - 09:24:03 | 200 |   22.275769ms | 125.118.197.206 | GET      "/api/statistics"
+[GIN] 2026/03/19 - 09:24:03 | 200 |   38.837948ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:24:03 | 200 |   38.959629ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:24:03 | 200 |    2.354052ms | 125.118.197.206 | GET      "/api/expiring-contracts?days=30"
+[GIN] 2026/03/19 - 09:24:03 | 200 |    2.393279ms | 125.118.197.206 | GET      "/api/expiring-contracts?days=30"
+[GIN] 2026/03/19 - 09:24:23 | 200 |   12.402541ms | 125.118.197.206 | GET      "/api/customers?skip=0&limit=10&name=&type="
+[GIN] 2026/03/19 - 09:24:23 | 200 |   12.542227ms | 125.118.197.206 | GET      "/api/customers?skip=0&limit=10&name=&type="
+[GIN] 2026/03/19 - 09:24:25 | 200 |    4.333509ms | 125.118.197.206 | GET      "/api/contract-types?limit=1000"
+[GIN] 2026/03/19 - 09:24:25 | 200 |     4.45617ms | 125.118.197.206 | GET      "/api/contract-types?limit=1000"
+[GIN] 2026/03/19 - 09:24:25 | 200 |     21.2799ms | 125.118.197.206 | GET      "/api/contracts?skip=0&limit=10&title=&status="
+[GIN] 2026/03/19 - 09:24:25 | 200 |   21.392125ms | 125.118.197.206 | GET      "/api/contracts?skip=0&limit=10&title=&status="
+[GIN] 2026/03/19 - 09:24:25 | 200 |   48.941829ms | 125.118.197.206 | GET      "/api/customers?limit=1000"
+[GIN] 2026/03/19 - 09:24:25 | 200 |   49.038968ms | 125.118.197.206 | GET      "/api/customers?limit=1000"
+[GIN] 2026/03/19 - 09:24:27 | 200 |    5.767143ms | 125.118.197.206 | GET      "/api/contracts/1"
+[GIN] 2026/03/19 - 09:24:27 | 200 |    5.807603ms | 125.118.197.206 | GET      "/api/contracts/1"
+[GIN] 2026/03/19 - 09:24:27 | 200 |    6.493168ms | 125.118.197.206 | GET      "/api/contracts/1/approvals"
+[GIN] 2026/03/19 - 09:24:27 | 200 |    6.555901ms | 125.118.197.206 | GET      "/api/contracts/1/approvals"
+[GIN] 2026/03/19 - 09:24:28 | 200 |    9.667324ms | 125.118.197.206 | GET      "/api/contracts/1/executions"
+[GIN] 2026/03/19 - 09:24:28 | 200 |    9.723158ms | 125.118.197.206 | GET      "/api/contracts/1/executions"
+[GIN] 2026/03/19 - 09:24:28 | 200 |    7.298659ms | 125.118.197.206 | GET      "/api/contracts/1/documents"
+[GIN] 2026/03/19 - 09:24:28 | 200 |    7.364452ms | 125.118.197.206 | GET      "/api/contracts/1/documents"
+[GIN] 2026/03/19 - 09:24:29 | 200 |    4.531693ms | 125.118.197.206 | GET      "/api/documents/5/preview"
+[GIN] 2026/03/19 - 09:24:29 | 200 |    4.624667ms | 125.118.197.206 | GET      "/api/documents/5/preview"
+[GIN] 2026/03/19 - 09:24:33 | 200 |    9.503829ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:24:33 | 200 |    9.597954ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:24:33 | 200 |     1.13875ms | 125.118.197.206 | GET      "/api/customers?skip=0&limit=10&name=&type="
+[GIN] 2026/03/19 - 09:24:33 | 200 |    1.222464ms | 125.118.197.206 | GET      "/api/customers?skip=0&limit=10&name=&type="
+[GIN] 2026/03/19 - 09:24:35 | 200 |    1.864121ms | 125.118.197.206 | GET      "/api/auth/users?skip=0&limit=10"
+[GIN] 2026/03/19 - 09:24:35 | 200 |    1.987136ms | 125.118.197.206 | GET      "/api/auth/users?skip=0&limit=10"
+
+2026/03/19 09:24:42 [31;1m/root/AnXin_Contract_Manage_v1/services/user_service.go:133 [35;1mError 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`contract_manage`.`audit_logs`, CONSTRAINT `fk_audit_logs_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`))
+[0m[33m[33.619ms] [34;1m[rows:0][0m DELETE FROM `users` WHERE `users`.`id` = 3
+[GIN] 2026/03/19 - 09:24:42 | 400 |   34.450615ms | 125.118.197.206 | DELETE   "/api/auth/users/3"
+[GIN] 2026/03/19 - 09:24:42 | 400 |   34.505654ms | 125.118.197.206 | DELETE   "/api/auth/users/3"
+[GIN] 2026/03/19 - 09:24:45 | 200 |    1.895539ms | 125.118.197.206 | GET      "/api/auth/users?skip=0&limit=10"
+[GIN] 2026/03/19 - 09:24:45 | 200 |    1.933809ms | 125.118.197.206 | GET      "/api/auth/users?skip=0&limit=10"
+[GIN] 2026/03/19 - 09:24:46 | 200 |     999.246µs | 125.118.197.206 | GET      "/api/auth/users?skip=0&limit=10"
+[GIN] 2026/03/19 - 09:24:46 | 200 |    1.106912ms | 125.118.197.206 | GET      "/api/auth/users?skip=0&limit=10"
+[GIN] 2026/03/19 - 09:24:55 | 204 |   22.605353ms | 125.118.197.206 | DELETE   "/api/auth/users/6"
+[GIN] 2026/03/19 - 09:24:55 | 204 |   22.684559ms | 125.118.197.206 | DELETE   "/api/auth/users/6"
+[GIN] 2026/03/19 - 09:24:55 | 200 |    1.309549ms | 125.118.197.206 | GET      "/api/auth/users?skip=0&limit=10"
+[GIN] 2026/03/19 - 09:24:55 | 200 |    1.341528ms | 125.118.197.206 | GET      "/api/auth/users?skip=0&limit=10"
+[GIN] 2026/03/19 - 09:25:03 | 200 |    5.159586ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:25:03 | 200 |     5.20748ms | 125.118.197.206 | GET      "/api/notifications/count"
+
+2026/03/19 09:25:06 [31;1m/root/AnXin_Contract_Manage_v1/services/user_service.go:133 [35;1mError 1451 (23000): Cannot delete or update a parent row: a foreign key constraint fails (`contract_manage`.`audit_logs`, CONSTRAINT `fk_audit_logs_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`))
+[0m[33m[5.031ms] [34;1m[rows:0][0m DELETE FROM `users` WHERE `users`.`id` = 3
+[GIN] 2026/03/19 - 09:25:06 | 400 |     5.32513ms | 125.118.197.206 | DELETE   "/api/auth/users/3"
+[GIN] 2026/03/19 - 09:25:06 | 400 |    5.340472ms | 125.118.197.206 | DELETE   "/api/auth/users/3"
+[GIN] 2026/03/19 - 09:25:13 | 200 |    2.040996ms | 125.118.197.206 | GET      "/api/auth/users?skip=0&limit=10"
+[GIN] 2026/03/19 - 09:25:13 | 200 |    2.090626ms | 125.118.197.206 | GET      "/api/auth/users?skip=0&limit=10"
+[GIN] 2026/03/19 - 09:25:15 | 200 |   32.443454ms | 125.118.197.206 | GET      "/api/audit-logs?page=1&page_size=20"
+[GIN] 2026/03/19 - 09:25:15 | 200 |    32.53009ms | 125.118.197.206 | GET      "/api/audit-logs?page=1&page_size=20"
+[GIN] 2026/03/19 - 09:25:21 | 200 |    5.360509ms | 125.118.197.206 | GET      "/api/audit-logs?page=1&page_size=20&module=user"
+[GIN] 2026/03/19 - 09:25:21 | 200 |    5.424448ms | 125.118.197.206 | GET      "/api/audit-logs?page=1&page_size=20&module=user"
+[GIN] 2026/03/19 - 09:25:25 | 200 |    6.447357ms | 125.118.197.206 | GET      "/api/audit-logs?page=1&page_size=20&module=contract"
+[GIN] 2026/03/19 - 09:25:25 | 200 |    6.569349ms | 125.118.197.206 | GET      "/api/audit-logs?page=1&page_size=20&module=contract"
+[GIN] 2026/03/19 - 09:25:29 | 200 |    4.382217ms | 125.118.197.206 | GET      "/api/audit-logs?page=1&page_size=20&module=auth"
+[GIN] 2026/03/19 - 09:25:29 | 200 |    4.461159ms | 125.118.197.206 | GET      "/api/audit-logs?page=1&page_size=20&module=auth"
+[GIN] 2026/03/19 - 09:25:33 | 200 |    4.655936ms | 125.118.197.206 | GET      "/api/audit-logs?page=1&page_size=20&module=reminder"
+[GIN] 2026/03/19 - 09:25:33 | 200 |    4.731415ms | 125.118.197.206 | GET      "/api/audit-logs?page=1&page_size=20&module=reminder"
+[GIN] 2026/03/19 - 09:25:33 | 200 |    4.584659ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:25:33 | 200 |    4.641078ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:25:35 | 200 |    4.088434ms | 125.118.197.206 | GET      "/api/audit-logs?page=1&page_size=20&module=user"
+[GIN] 2026/03/19 - 09:25:35 | 200 |    4.155107ms | 125.118.197.206 | GET      "/api/audit-logs?page=1&page_size=20&module=user"
+[GIN] 2026/03/19 - 09:25:38 | 200 |    6.612245ms | 125.118.197.206 | GET      "/api/audit-logs?page=1&page_size=20&module=statistics"
+[GIN] 2026/03/19 - 09:25:38 | 200 |    6.767922ms | 125.118.197.206 | GET      "/api/audit-logs?page=1&page_size=20&module=statistics"
+[GIN] 2026/03/19 - 09:26:03 | 200 |     4.30368ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:26:03 | 200 |    4.354016ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:26:33 | 200 |    7.971096ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:26:33 | 200 |    8.068453ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:27:03 | 200 |    4.217705ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:27:03 | 200 |    4.455471ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:27:56 | 200 |    4.541201ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:27:56 | 200 |    4.607989ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:28:56 | 200 |     3.62591ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:28:56 | 200 |    3.733915ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:29:56 | 200 |    3.208635ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:29:56 | 200 |      3.3495ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:30:56 | 200 |    6.084085ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:30:56 | 200 |    6.144688ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:31:56 | 200 |    4.343691ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:31:56 | 200 |    4.407331ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:32:56 | 200 |   47.134684ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:32:56 | 200 |   49.123772ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:33:56 | 200 |    4.248035ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:33:56 | 200 |    4.304847ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:34:56 | 200 |    5.429401ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:34:56 | 200 |     5.49411ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:35:56 | 200 |     8.59787ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:35:56 | 200 |    8.663845ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:36:56 | 200 |    4.902743ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:36:56 | 200 |    4.964871ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:37:56 | 200 |    4.700249ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:37:56 | 200 |    4.772741ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:38:56 | 200 |    4.611999ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:38:56 | 200 |    4.718367ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:39:56 | 200 |     4.38348ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:39:56 | 200 |    4.451441ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:40:56 | 200 |    4.364278ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:40:56 | 200 |    4.429432ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:41:56 | 200 |    5.020979ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:41:56 | 200 |    5.166388ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:42:56 | 200 |     4.53616ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:42:56 | 200 |    4.621154ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:43:57 | 200 |    6.514403ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:43:57 | 200 |    6.599752ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:44:56 | 200 |    4.413143ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:44:56 | 200 |    4.473904ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:45:56 | 200 |    4.955738ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:45:56 | 200 |    5.067873ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:46:56 | 200 |    6.849198ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:46:56 | 200 |    7.027161ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:47:56 | 200 |    3.970047ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:47:56 | 200 |    4.058683ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:48:56 | 200 |    4.969476ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:48:56 | 200 |     5.03106ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:49:56 | 200 |    4.556784ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:49:56 | 200 |    4.615211ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:50:56 | 200 |    3.944197ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:50:56 | 200 |    4.061439ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:51:30 | 200 |    8.556765ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:51:30 | 200 |    8.670986ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:51:36 | 200 |    4.678359ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:51:36 | 200 |    4.731804ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:52:03 | 200 |    4.469343ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:52:03 | 200 |    4.912825ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:52:33 | 200 |    5.524642ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:52:33 | 200 |     5.61678ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:53:03 | 200 |    5.692533ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:53:03 | 200 |    5.800133ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:53:33 | 200 |     6.19263ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:53:33 | 200 |    6.260493ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:54:03 | 401 |    1.838204ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:54:03 | 401 |    1.914618ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:54:18 | 200 |  350.031347ms | 125.118.197.206 | POST     "/api/auth/login"
+[GIN] 2026/03/19 - 09:54:18 | 200 |  350.659821ms | 125.118.197.206 | POST     "/api/auth/login"
+[GIN] 2026/03/19 - 09:54:20 | 200 |    5.633996ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:54:20 | 200 |    5.793277ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:54:20 | 200 |   39.696542ms | 125.118.197.206 | GET      "/api/statistics"
+[GIN] 2026/03/19 - 09:54:20 | 200 |   39.779644ms | 125.118.197.206 | GET      "/api/statistics"
+[GIN] 2026/03/19 - 09:54:20 | 200 |    2.963715ms | 125.118.197.206 | GET      "/api/expiring-contracts?days=30"
+[GIN] 2026/03/19 - 09:54:20 | 200 |    3.021171ms | 125.118.197.206 | GET      "/api/expiring-contracts?days=30"
+[GIN] 2026/03/19 - 09:54:25 | 200 |    4.594697ms | 125.118.197.206 | GET      "/api/customers?limit=1000"
+[GIN] 2026/03/19 - 09:54:25 | 200 |    4.649616ms | 125.118.197.206 | GET      "/api/customers?limit=1000"
+[GIN] 2026/03/19 - 09:54:25 | 200 |    9.836161ms | 125.118.197.206 | GET      "/api/contract-types?limit=1000"
+[GIN] 2026/03/19 - 09:54:25 | 200 |    9.948706ms | 125.118.197.206 | GET      "/api/contract-types?limit=1000"
+[GIN] 2026/03/19 - 09:54:25 | 200 |  168.802186ms | 125.118.197.206 | GET      "/api/contracts?skip=0&limit=10&title=&status="
+[GIN] 2026/03/19 - 09:54:25 | 200 |  168.867996ms | 125.118.197.206 | GET      "/api/contracts?skip=0&limit=10&title=&status="
+[GIN] 2026/03/19 - 09:54:28 | 200 |    3.621541ms | 125.118.197.206 | GET      "/api/contract-types?limit=1000"
+[GIN] 2026/03/19 - 09:54:28 | 200 |    3.715952ms | 125.118.197.206 | GET      "/api/contract-types?limit=1000"
+[GIN] 2026/03/19 - 09:54:28 | 200 |   10.045204ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:54:28 | 200 |   10.474792ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:54:28 | 200 |   48.723228ms | 125.118.197.206 | GET      "/api/customers?limit=1000"
+[GIN] 2026/03/19 - 09:54:28 | 200 |   48.855652ms | 125.118.197.206 | GET      "/api/customers?limit=1000"
+[GIN] 2026/03/19 - 09:54:28 | 200 |   63.270497ms | 125.118.197.206 | GET      "/api/contracts?skip=0&limit=10&title=&status="
+[GIN] 2026/03/19 - 09:54:28 | 200 |   63.361661ms | 125.118.197.206 | GET      "/api/contracts?skip=0&limit=10&title=&status="
+[GIN] 2026/03/19 - 09:54:31 | 200 |    8.537674ms | 125.118.197.206 | GET      "/api/contracts/1"
+[GIN] 2026/03/19 - 09:54:31 | 200 |     8.62714ms | 125.118.197.206 | GET      "/api/contracts/1"
+[GIN] 2026/03/19 - 09:54:31 | 200 |    4.817114ms | 125.118.197.206 | GET      "/api/contracts/1/approvals"
+[GIN] 2026/03/19 - 09:54:31 | 200 |    4.899441ms | 125.118.197.206 | GET      "/api/contracts/1/approvals"
+[GIN] 2026/03/19 - 09:54:32 | 200 |    2.049865ms | 125.118.197.206 | GET      "/api/contracts/1/executions"
+[GIN] 2026/03/19 - 09:54:32 | 200 |    2.102387ms | 125.118.197.206 | GET      "/api/contracts/1/executions"
+[GIN] 2026/03/19 - 09:54:32 | 200 |    2.110104ms | 125.118.197.206 | GET      "/api/contracts/1/documents"
+[GIN] 2026/03/19 - 09:54:32 | 200 |    2.214158ms | 125.118.197.206 | GET      "/api/contracts/1/documents"
+[GIN] 2026/03/19 - 09:54:34 | 200 |     5.48077ms | 125.118.197.206 | GET      "/api/documents/4/preview"
+[GIN] 2026/03/19 - 09:54:34 | 200 |    5.541354ms | 125.118.197.206 | GET      "/api/documents/4/preview"
+[GIN] 2026/03/19 - 09:54:58 | 200 |    4.382186ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:54:58 | 200 |    4.533407ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:55:28 | 200 |    4.595156ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:55:28 | 200 |     4.65028ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:55:59 | 200 |  196.399498ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:55:59 | 200 |   199.87696ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:56:28 | 200 |   16.476516ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:56:28 | 200 |   16.582565ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:56:58 | 200 |    8.834508ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:56:58 | 200 |     8.89376ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:57:29 | 200 |  103.586018ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:57:29 | 200 |  115.966626ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:57:58 | 200 |   18.514496ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:57:58 | 200 |   18.602743ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:58:28 | 200 |   24.141697ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:58:28 | 200 |   24.257142ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:58:58 | 200 |    6.173252ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:58:58 | 200 |    6.246875ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:59:28 | 200 |   63.068905ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:59:28 | 200 |    63.96834ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:59:58 | 200 |   23.160753ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 09:59:58 | 200 |   23.234084ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:00:28 | 200 |   10.888918ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:00:28 | 200 |   11.004119ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:00:58 | 200 |   39.066855ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:00:58 | 200 |   39.199416ms | 125.118.197.206 | GET      "/api/notifications/count"
+
+2026/03/19 10:01:29 [32m/root/AnXin_Contract_Manage_v1/services/approval_service.go:157 [33mSLOW SQL >= 200ms
+[0m[31;1m[347.700ms] [33m[rows:0][35m SELECT * FROM `contracts` WHERE status = 'pending' ORDER BY created_at DESC[0m
+[GIN] 2026/03/19 - 10:01:29 | 200 |  393.886423ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:01:29 | 200 |  394.004421ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:01:58 | 200 |   16.990264ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:01:58 | 200 |   17.477626ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:02:29 | 200 |  101.894537ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:02:29 | 200 |  102.035624ms | 125.118.197.206 | GET      "/api/notifications/count"
+
+2026/03/19 10:02:59 [32m/root/AnXin_Contract_Manage_v1/services/approval_service.go:157 [33mSLOW SQL >= 200ms
+[0m[31;1m[437.419ms] [33m[rows:0][35m SELECT * FROM `contracts` WHERE status = 'pending' ORDER BY created_at DESC[0m
+[GIN] 2026/03/19 - 10:02:59 | 200 |  597.287296ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:02:59 | 200 |  597.360049ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:03:29 | 200 |  194.424461ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:03:29 | 200 |  198.947064ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:03:59 | 200 |  150.277607ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:03:59 | 200 |  150.414309ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:04:29 | 200 |  102.325163ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:04:29 | 200 |  102.424282ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:04:58 | 200 |   13.447564ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:04:58 | 200 |   13.496641ms | 125.118.197.206 | GET      "/api/notifications/count"
+
+2026/03/19 10:05:29 [32m/root/AnXin_Contract_Manage_v1/services/approval_service.go:157 [33mSLOW SQL >= 200ms
+[0m[31;1m[364.954ms] [33m[rows:0][35m SELECT * FROM `contracts` WHERE status = 'pending' ORDER BY created_at DESC[0m
+[GIN] 2026/03/19 - 10:05:29 | 200 |  449.454526ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:05:29 | 200 |  450.107079ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:05:59 | 200 |  237.501315ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:05:59 | 200 |  240.382488ms | 125.118.197.206 | GET      "/api/notifications/count"
+
+2026/03/19 10:06:30 [32m/root/AnXin_Contract_Manage_v1/services/approval_service.go:157 [33mSLOW SQL >= 200ms
+[0m[31;1m[270.049ms] [33m[rows:0][35m SELECT * FROM `contracts` WHERE status = 'pending' ORDER BY created_at DESC[0m
+[GIN] 2026/03/19 - 10:06:30 | 200 |  360.094667ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:06:30 | 200 |  360.261374ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:07:56 | 200 |    5.589385ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:07:56 | 200 |    5.697541ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:08:41 | 200 |    5.675889ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:08:41 | 200 |    5.737976ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:08:59 | 200 |    5.360309ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:08:59 | 200 |    5.409899ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:09:29 | 200 |    4.209881ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:09:29 | 200 |    4.893388ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:10:01 | 200 |  111.778773ms |             ::1 | GET      "/health"
+[GIN] 2026/03/19 - 10:10:01 | 200 |   167.53516ms |             ::1 | GET      "/health"
+
+2026/03/19 10:10:06 [32m/root/AnXin_Contract_Manage_v1/services/approval_service.go:157 [33mSLOW SQL >= 200ms
+[0m[31;1m[5858.298ms] [33m[rows:0][35m SELECT * FROM `contracts` WHERE status = 'pending' ORDER BY created_at DESC[0m
+[GIN] 2026/03/19 - 10:10:06 | 200 |  6.265535604s | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:10:06 | 200 |  6.265604721s | 125.118.197.206 | GET      "/api/notifications/count"
+
+2026/03/19 10:10:07 [32m/root/AnXin_Contract_Manage_v1/services/audit_service.go:15 [33mSLOW SQL >= 200ms
+[0m[31;1m[627.963ms] [33m[rows:1][35m INSERT INTO `audit_logs` (`user_id`,`username`,`action`,`module`,`method`,`path`,`ip_address`,`user_agent`,`request`,`response`,`status_code`,`created_at`) VALUES (4,'admin','GET /api/notifications/count','other','GET','/api/notifications/count','125.118.197.206','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36','','',200,'2026-03-19 10:10:06.885')[0m
+
+2026/03/19 10:10:58 [32m/root/AnXin_Contract_Manage_v1/services/approval_service.go:157 [33mSLOW SQL >= 200ms
+[0m[31;1m[1076.842ms] [33m[rows:0][35m SELECT * FROM `contracts` WHERE status = 'pending' ORDER BY created_at DESC[0m
+[GIN] 2026/03/19 - 10:10:58 | 200 |    1.4301297s | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:10:58 | 200 |  1.439446368s | 125.118.197.206 | GET      "/api/notifications/count"
+
+2026/03/19 10:10:58 [32m/root/AnXin_Contract_Manage_v1/services/audit_service.go:15 [33mSLOW SQL >= 200ms
+[0m[31;1m[570.816ms] [33m[rows:1][35m INSERT INTO `audit_logs` (`user_id`,`username`,`action`,`module`,`method`,`path`,`ip_address`,`user_agent`,`request`,`response`,`status_code`,`created_at`) VALUES (4,'admin','GET /api/notifications/count','other','GET','/api/notifications/count','125.118.197.206','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36','','',200,'2026-03-19 10:10:58.62')[0m
+
+2026/03/19 10:11:57 [32m/root/AnXin_Contract_Manage_v1/services/approval_service.go:157 [33mSLOW SQL >= 200ms
+[0m[31;1m[288.462ms] [33m[rows:0][35m SELECT * FROM `contracts` WHERE status = 'pending' ORDER BY created_at DESC[0m
+[GIN] 2026/03/19 - 10:11:57 | 200 |  323.464764ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:11:57 | 200 |  323.764836ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:12:56 | 200 |   19.518098ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:12:56 | 200 |   20.245078ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:13:56 | 200 |    7.433544ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:13:56 | 200 |    7.779835ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:14:56 | 200 |    4.376262ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:14:56 | 200 |    4.444974ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:15:56 | 200 |    4.192847ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:15:56 | 200 |    4.252598ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:16:56 | 200 |    3.976247ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:16:56 | 200 |    4.033463ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:17:56 | 200 |    4.352845ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:17:56 | 200 |    4.409832ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:18:56 | 200 |    6.732732ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:18:56 | 200 |     6.79162ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:19:56 | 200 |     8.41801ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:19:56 | 200 |     8.54299ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:20:41 | 200 |    4.689353ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:20:41 | 200 |    4.772347ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:21:56 | 200 |    4.294027ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:21:56 | 200 |    4.356444ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:22:56 | 200 |    4.197619ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:22:56 | 200 |    4.334274ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:23:36 | 404 |       42.72µs |   84.247.132.96 | GET      "/v2/_catalog"
+[GIN] 2026/03/19 - 10:23:36 | 404 |     101.488µs |   84.247.132.96 | GET      "/v2/_catalog"
+[GIN] 2026/03/19 - 10:23:56 | 200 |    5.152232ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:23:56 | 200 |    5.218031ms | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:24:56 | 401 |     929.831µs | 125.118.197.206 | GET      "/api/notifications/count"
+[GIN] 2026/03/19 - 10:24:56 | 401 |     984.674µs | 125.118.197.206 | GET      "/api/notifications/count"

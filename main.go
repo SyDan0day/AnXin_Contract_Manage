@@ -18,7 +18,7 @@ var apiDocs = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API 调试 - 安心合同管理系统</title>
+    <title>API 调试 - 安信合同管理系统</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -586,10 +586,14 @@ func main() {
 		})
 	})
 
+	// 静态文件服务 - 上传的文件
+	r.Static("/uploads", "./uploads")
+
 	authHandler := handlers.NewAuthHandler()
 	customerHandler := handlers.NewCustomerHandler()
 	contractHandler := handlers.NewContractHandler()
 	approvalHandler := handlers.NewApprovalHandler()
+	workflowHandler := handlers.NewWorkflowHandler()
 	auditHandler := handlers.NewAuditHandler()
 
 	auth := r.Group("/api/auth")
@@ -635,12 +639,20 @@ func main() {
 
 		api.GET("/contracts/:contract_id/documents", contractHandler.GetContractDocuments)
 		api.POST("/contracts/:contract_id/documents", contractHandler.CreateContractDocument)
+		api.GET("/documents/:document_id/preview", contractHandler.PreviewDocument)
 		api.DELETE("/documents/:document_id", contractHandler.DeleteDocument)
 
 		api.GET("/contracts/:contract_id/approvals", approvalHandler.GetContractApprovals)
 		api.POST("/contracts/:contract_id/approvals", approvalHandler.CreateApproval)
 		api.PUT("/approvals/:approval_id", approvalHandler.UpdateApproval)
 		api.GET("/pending-approvals", approvalHandler.GetPendingApprovals)
+
+		// 工作流审批路由
+		api.POST("/workflow/create", workflowHandler.CreateWorkflow)
+		api.GET("/workflow/:contract_id", workflowHandler.GetWorkflow)
+		api.GET("/workflow/:contract_id/pending", workflowHandler.GetMyPendingApproval)
+		api.POST("/workflow/approve", workflowHandler.Approve)
+		api.POST("/workflow/reject", workflowHandler.Reject)
 
 		api.GET("/pending-status-changes", contractHandler.GetPendingStatusChangeApprovals)
 		api.POST("/status-change-requests/:request_id/approve", contractHandler.ApproveStatusChangeRequest)

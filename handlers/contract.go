@@ -251,6 +251,127 @@ func (h *ContractHandler) CreateContractDocument(c *gin.Context) {
 	c.JSON(http.StatusCreated, document)
 }
 
+func (h *ContractHandler) PreviewDocument(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("document_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid document ID"})
+		return
+	}
+
+	document, err := h.contractService.GetDocumentByID(uint(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Document not found"})
+		return
+	}
+
+	// 构建绝对文件路径
+	absFilePath := filepath.Join(".", document.FilePath)
+
+	// 检查文件是否存在
+	if _, err := os.Stat(absFilePath); os.IsNotExist(err) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found: " + absFilePath})
+		return
+	}
+
+	// 根据文件类型返回不同的内容
+	fileExt := strings.ToLower(filepath.Ext(document.Name))
+
+	// Word 文档 (.docx) 返回纯文本内容
+	if fileExt == ".docx" {
+		text, err := extractTextFromDocx(absFilePath)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "无法读取文档内容: " + err.Error()})
+			return
+		}
+
+		// 返回纯文本内容
+		c.JSON(http.StatusOK, gin.H{
+			"document_id": document.ID,
+			"file_name":   document.Name,
+			"file_type":   document.FileType,
+			"file_size":   document.FileSize,
+			"created_at":  document.CreatedAt,
+			"content":     text,
+		})
+		return
+	}
+
+	switch fileExt {
+	case ".pdf":
+		// PDF 文件直接返回
+		c.Header("Content-Type", "application/pdf")
+		c.File(absFilePath)
+	case ".doc":
+		// Word 文档返回文件内容
+		c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+		c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", document.Name))
+		c.File(absFilePath)
+	case ".xls", ".xlsx":
+		// Excel 文件返回文件内容
+		c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+		c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", document.Name))
+		c.File(absFilePath)
+	case ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp":
+		// 图片文件直接返回
+		c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", document.Name))
+		c.File(absFilePath)
+	case ".txt":
+		// 文本文件返回内容
+		content, err := os.ReadFile(absFilePath)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "无法读取文件内容"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"document_id": document.ID,
+			"file_name":   document.Name,
+			"file_type":   document.FileType,
+			"file_size":   document.FileSize,
+			"created_at":  document.CreatedAt,
+			"content":     string(content),
+		})
+		return
+	case ".html", ".htm":
+		// HTML 文件返回内容
+		c.Header("Content-Type", "text/html; charset=utf-8")
+		c.File(absFilePath)
+	default:
+		c.JSON(http.StatusBadRequest, gin.H{"error": "不支持的文件类型: " + fileExt})
+	}
+}
+
+// convertWordToHTML 将 Word 文档转换为 HTML
+func (h *ContractHandler) convertWordToHTML(docxPath, filePath string) (string, error) {
+	// 使用 mammoth 库转换 Word 到 HTML
+	// 这里需要调用 Python 脚本
+	// 由于 Go 调用 Python 比较复杂，我们可以使用 exec 执行 mammoth 命令行工具
+	// 或者使用 Go 库
+
+	// 简单实现：返回提示信息，实际部署时需要安装 mammoth 并调用
+	return fmt.Sprintf(`
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<meta charset="UTF-8">
+			<title>文档预览</title>
+			<style>
+				body { font-family: Arial, sans-serif; margin: 20px; }
+				.info { background: #f0f0f0; padding: 20px; border-radius: 5px; }
+			</style>
+		</head>
+		<body>
+			<div class="info">
+				<h3>Word 文档预览</h3>
+				<p>文件: %s</p>
+				<p>Word 文档需要下载后查看完整内容。</p>
+				<p><a href="%s" download>点击下载文件</a></p>
+			</div>
+		</body>
+		</html>
+	`, filepath.Base(docxPath), filePath), nil
+}
+
 func (h *ContractHandler) DeleteDocument(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("document_id"), 10, 32)
 	if err != nil {
@@ -462,14 +583,14 @@ func extractContractData(text string) map[string]interface{} {
 	data := make(map[string]interface{})
 
 	patterns := map[string]string{
-		"contract_no":   `合同编号[：:]\s*([A-Z0-9\-]+)`,
-		"title":         `合同名称[：:]\s*(.{2,50})`,
-		"customer_name": `甲方[（(]客户[）)][：:]\s*(.{2,50})`,
-		"amount":        `合同金额[：:]\s*([\d,]+\.?\d*)\s*(元|万)?`,
-		"sign_date":     `签订日期[：:]\s*(\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[日]?)`,
-		"start_date":    `开始日期[：:]\s*(\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[日]?)`,
-		"end_date":      `结束日期[：:]\s*(\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[日]?)`,
-		"contract_type": `合同类型[：:]\s*(.{2,20})`,
+		"contract_no":   `合同编号[：:]\s*([A-Z0-9\-]+)(?:\s|$|\n)`,
+		"title":         `合同名称[：:]\s*([^\n]+?)\s*(?:\n|$)`,
+		"customer_name": `甲方[（(]客户[）)][：:]\s*([^\n]+?)\s*(?:\n|$)`,
+		"amount":        `合同金额[：:]\s*([\d,]+\.?\d*)\s*(?:元|万)?(?:\s|$|\n)`,
+		"sign_date":     `签订日期[：:]\s*(\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[日]?)(?:\s|$|\n)`,
+		"start_date":    `开始日期[：:]\s*(\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[日]?)(?:\s|$|\n)`,
+		"end_date":      `结束日期[：:]\s*(\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[日]?)(?:\s|$|\n)`,
+		"contract_type": `合同类型[：:]\s*([^\n]+?)\s*(?:\n|$)`,
 	}
 
 	for key, pattern := range patterns {

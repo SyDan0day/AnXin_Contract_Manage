@@ -15,7 +15,7 @@
               </defs>
             </svg>
           </div>
-          <span class="logo-text">安心合同</span>
+          <span class="logo-text">安信合同</span>
         </div>
         
         <el-menu

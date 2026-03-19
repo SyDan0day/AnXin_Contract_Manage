@@ -15,7 +15,7 @@
             </defs>
           </svg>
         </div>
-        <h1 class="brand-title">安心合同</h1>
+        <h1 class="brand-title">安信合同</h1>
         <p class="brand-subtitle">智能合同管理解决方案</p>
       </div>
       
@@ -54,7 +54,7 @@
       <div class="register-card">
         <div class="register-header">
           <h2>创建账号</h2>
-          <p>开始使用安心合同管理系统</p>
+          <p>开始使用安信合同管理系统</p>
         </div>
         
         <el-form ref="registerFormRef" :model="registerForm" :rules="registerRules" size="large">

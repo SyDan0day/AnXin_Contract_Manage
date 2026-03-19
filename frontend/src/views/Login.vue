@@ -15,7 +15,7 @@
             </defs>
           </svg>
         </div>
-        <h1 class="brand-title">安心合同</h1>
+        <h1 class="brand-title">安信合同</h1>
         <p class="brand-subtitle">智能合同管理解决方案</p>
       </div>
       
@@ -103,7 +103,7 @@
       </div>
       
       <div class="login-footer">
-        <p>© 2024 安心合同管理系统 · 保留所有权利</p>
+        <p>© 2024 安信合同管理系统 · 保留所有权利</p>
       </div>
     </div>
   </div>

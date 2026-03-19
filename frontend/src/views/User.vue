@@ -15,8 +15,12 @@
         </el-form-item>
         <el-form-item label="角色">
           <el-select v-model="searchForm.role" placeholder="请选择角色" clearable>
-            <el-option label="管理员" value="admin" />
-            <el-option label="经理" value="manager" />
+            <el-option label="超级管理员" value="super_admin" />
+            <el-option label="行政" value="admin" />
+            <el-option label="技术总监" value="director" />
+            <el-option label="销售经理" value="sales_manager" />
+            <el-option label="销售" value="sales" />
+            <el-option label="审计管理员" value="audit_admin" />
             <el-option label="普通用户" value="user" />
           </el-select>
         </el-form-item>
@@ -78,8 +82,12 @@
         </el-form-item>
         <el-form-item label="角色" prop="role">
           <el-select v-model="formData.role" placeholder="请选择角色" style="width: 100%">
-            <el-option label="管理员" value="admin" />
-            <el-option label="经理" value="manager" />
+            <el-option label="超级管理员" value="super_admin" />
+            <el-option label="行政" value="admin" />
+            <el-option label="技术总监" value="director" />
+            <el-option label="销售经理" value="sales_manager" />
+            <el-option label="销售" value="sales" />
+            <el-option label="审计管理员" value="audit_admin" />
             <el-option label="普通用户" value="user" />
           </el-select>
         </el-form-item>
@@ -143,17 +151,25 @@ const formRules = {
 
 const getRoleType = (role) => {
   const typeMap = {
-    admin: 'danger',
-    manager: 'warning',
-    user: 'primary'
+    super_admin: 'danger',
+    admin: 'warning',
+    director: 'success',
+    sales_manager: 'primary',
+    sales: 'info',
+    audit_admin: 'warning',
+    user: ''
   }
   return typeMap[role] || ''
 }
 
 const getRoleText = (role) => {
   const textMap = {
-    admin: '管理员',
-    manager: '经理',
+    super_admin: '超级管理员',
+    admin: '行政',
+    director: '技术总监',
+    sales_manager: '销售经理',
+    sales: '销售',
+    audit_admin: '审计管理员',
     user: '普通用户'
   }
   return textMap[role] || role
