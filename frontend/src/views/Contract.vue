@@ -51,11 +51,19 @@
             {{ formatDate(row.end_date) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
-            <el-button type="primary" link @click="handleView(row)">详情</el-button>
-            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+            <div class="action-buttons">
+              <el-button type="primary" link @click="handleView(row)">
+                <el-icon><View /></el-icon> 详情
+              </el-button>
+              <el-button type="warning" link @click="handleEdit(row)">
+                <el-icon><Edit /></el-icon> 编辑
+              </el-button>
+              <el-button type="danger" link @click="handleDelete(row)">
+                <el-icon><Delete /></el-icon> 删除
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -150,8 +158,10 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSubmit">确定</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -161,6 +171,7 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, View, Edit, Delete } from '@element-plus/icons-vue'
 import { getContractList, getContractDetail, createContract, updateContract, deleteContract } from '@/api/contract'
 import { getCustomerList } from '@/api/customer'
 import { getContractTypeList } from '@/api/customer'
@@ -330,6 +341,12 @@ const handleDialogClose = () => {
 }
 
 onMounted(async () => {
+  if (route.query.status) {
+    searchForm.status = route.query.status
+  }
+  if (route.query.title) {
+    searchForm.title = route.query.title
+  }
   loadData()
   loadCustomers()
   loadContractTypes()
@@ -355,5 +372,24 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-buttons .el-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 </style>

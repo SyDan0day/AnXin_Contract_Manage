@@ -25,12 +25,22 @@
             {{ formatDateTime(row.created_at) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="240" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link @click="handleView(row)">查看</el-button>
-            <el-button v-if="row.status === 'draft'" type="warning" link @click="handleSubmit(row)">提交审批</el-button>
-            <el-button v-else-if="row.status === 'pending'" type="success" link @click="handleApprove(row)">{{ userRole === 'admin' ? '二级审批' : '一级审批' }}</el-button>
-            <el-button v-else-if="row.status === 'active'" type="info" link disabled>已生效</el-button>
+            <div class="action-buttons">
+              <el-button type="primary" link @click="handleView(row)">
+                <el-icon><View /></el-icon> 查看
+              </el-button>
+              <el-button v-if="row.status === 'draft'" type="warning" link @click="handleSubmit(row)">
+                <el-icon><Position /></el-icon> 提交
+              </el-button>
+              <el-button v-else-if="row.status === 'pending'" type="success" link @click="handleApprove(row)">
+                <el-icon><Check /></el-icon> {{ userRole === 'admin' ? '二级审批' : '一级审批' }}
+              </el-button>
+              <el-button v-else-if="row.status === 'active'" type="info" link disabled>
+                已生效
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -63,11 +73,19 @@
             {{ formatDateTime(row.created_at) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150" fixed="right">
+        <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link @click="handleViewStatusChange(row)">查看</el-button>
-            <el-button type="success" link @click="handleApproveStatusChange(row)">通过</el-button>
-            <el-button type="danger" link @click="handleRejectStatusChange(row)">拒绝</el-button>
+            <div class="action-buttons">
+              <el-button type="primary" link @click="handleViewStatusChange(row)">
+                <el-icon><View /></el-icon> 查看
+              </el-button>
+              <el-button type="success" link @click="handleApproveStatusChange(row)">
+                <el-icon><Check /></el-icon> 通过
+              </el-button>
+              <el-button type="danger" link @click="handleRejectStatusChange(row)">
+                <el-icon><Close /></el-icon> 拒绝
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -105,8 +123,10 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitApproval">确定</el-button>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSubmitApproval">确定</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -116,6 +136,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { View, Position, Check, Close } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
 import { getPendingApprovals, createApproval, updateApproval } from '@/api/approval'
 import { getPendingStatusChangeApprovals, approveStatusChangeRequest, rejectStatusChangeRequest } from '@/api/contract'
@@ -295,5 +316,24 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-buttons .el-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 </style>

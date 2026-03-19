@@ -23,12 +23,14 @@
             </el-descriptions-item>
             <el-descriptions-item label="状态">
               <el-tag :type="getStatusType(contract.status)">{{ getStatusText(contract.status) }}</el-tag>
-              <el-button type="primary" link size="small" style="margin-left: 8px" @click="showStatusDialog = true">
-                变更状态
-              </el-button>
-              <el-button v-if="contract.status !== 'archived'" type="warning" link size="small" style="margin-left: 8px" @click="handleArchive">
-                归档
-              </el-button>
+              <div class="status-actions">
+                <el-button type="primary" link size="small" @click="showStatusDialog = true">
+                  <el-icon><RefreshRight /></el-icon> 变更
+                </el-button>
+                <el-button v-if="contract.status !== 'archived'" type="warning" link size="small" @click="handleArchive">
+                  <el-icon><FolderOpened /></el-icon> 归档
+                </el-button>
+              </div>
             </el-descriptions-item>
             <el-descriptions-item label="签约日期">{{ formatDate(contract.sign_date) }}</el-descriptions-item>
             <el-descriptions-item label="开始日期">{{ formatDate(contract.start_date) }}</el-descriptions-item>
@@ -94,9 +96,11 @@
               </template>
             </el-table-column>
             <el-table-column prop="description" label="说明" />
-            <el-table-column label="操作" width="100" fixed="right">
+            <el-table-column label="操作" width="120" fixed="right">
               <template #default="{ row }">
-                <el-button type="danger" link @click="handleDeleteExecution(row)">删除</el-button>
+                <el-button type="danger" link @click="handleDeleteExecution(row)">
+                  <el-icon><Delete /></el-icon> 删除
+                </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -133,11 +137,19 @@
             </el-table-column>
             <el-table-column prop="version" label="版本" width="80" />
             <el-table-column prop="created_at" label="上传时间" width="180" />
-            <el-table-column label="操作" width="200" fixed="right">
+            <el-table-column label="操作" width="220" fixed="right">
               <template #default="{ row }">
-                <el-button type="primary" link @click="handlePreview(row)">预览</el-button>
-                <el-button type="primary" link @click="handleDownload(row)">下载</el-button>
-                <el-button type="danger" link @click="handleDeleteDocument(row)">删除</el-button>
+                <div class="action-buttons">
+                  <el-button type="primary" link @click="handlePreview(row)">
+                    <el-icon><View /></el-icon> 预览
+                  </el-button>
+                  <el-button type="success" link @click="handleDownload(row)">
+                    <el-icon><Download /></el-icon> 下载
+                  </el-button>
+                  <el-button type="danger" link @click="handleDeleteDocument(row)">
+                    <el-icon><Delete /></el-icon> 删除
+                  </el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -188,8 +200,10 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showExecutionDialog = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitExecution">确定</el-button>
+        <div class="dialog-footer">
+          <el-button @click="showExecutionDialog = false">取消</el-button>
+          <el-button type="primary" @click="handleSubmitExecution">确定</el-button>
+        </div>
       </template>
     </el-dialog>
 
@@ -200,8 +214,10 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showApprovalDialog = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitApproval">提交审批</el-button>
+        <div class="dialog-footer">
+          <el-button @click="showApprovalDialog = false">取消</el-button>
+          <el-button type="primary" @click="handleSubmitApproval">提交审批</el-button>
+        </div>
       </template>
     </el-dialog>
 
@@ -220,8 +236,10 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showStatusDialog = false">取消</el-button>
-        <el-button type="primary" @click="handleUpdateStatus">确定</el-button>
+        <div class="dialog-footer">
+          <el-button @click="showStatusDialog = false">取消</el-button>
+          <el-button type="primary" @click="handleUpdateStatus">确定</el-button>
+        </div>
       </template>
     </el-dialog>
     
@@ -277,8 +295,10 @@
         </div>
       </div>
       <template #footer>
-        <el-button @click="showPreviewDialog = false">关闭</el-button>
-        <el-button type="primary" @click="downloadPreviewFile">下载文件</el-button>
+        <div class="dialog-footer">
+          <el-button @click="showPreviewDialog = false">关闭</el-button>
+          <el-button type="primary" @click="downloadPreviewFile">下载文件</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -289,7 +309,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Plus, Upload, Loading, Warning } from '@element-plus/icons-vue'
+import { ArrowLeft, Plus, Upload, Loading, Warning, View, Edit, Delete, Download, RefreshRight, FolderOpened } from '@element-plus/icons-vue'
 import { getContractDetail, getContractExecutions, createContractExecution, deleteExecution, getContractDocuments, uploadDocument, deleteDocument, getContractLifecycle, updateContractStatus, archiveContract, requestStatusChange } from '@/api/contract'
 import { getApprovalRecords, createApproval } from '@/api/approval'
 import axios from 'axios'
@@ -765,6 +785,57 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.contract-detail {
+  padding: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.tab-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-buttons .el-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 12px;
+}
+
+.status-actions .el-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .preview-container {
   width: 100%;
   height: 70vh;

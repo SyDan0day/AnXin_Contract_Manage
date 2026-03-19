@@ -271,6 +271,8 @@ type Statistics struct {
 	ActiveContracts    int64   `json:"active_contracts"`
 	PendingContracts   int64   `json:"pending_contracts"`
 	CompletedContracts int64   `json:"completed_contracts"`
+	DraftContracts     int64   `json:"draft_contracts"`
+	TerminatedContracts int64  `json:"terminated_contracts"`
 	TotalAmount        float64 `json:"total_amount"`
 	ThisMonthContracts int64   `json:"this_month_contracts"`
 	ThisMonthAmount    float64 `json:"this_month_amount"`
@@ -287,6 +289,8 @@ func (s *ApprovalService) GetStatistics() (*Statistics, error) {
 	models.DB.Model(&models.Contract{}).Where("status = ?", models.StatusActive).Count(&stats.ActiveContracts)
 	models.DB.Model(&models.Contract{}).Where("status = ?", models.StatusPending).Count(&stats.PendingContracts)
 	models.DB.Model(&models.Contract{}).Where("status = ?", models.StatusCompleted).Count(&stats.CompletedContracts)
+	models.DB.Model(&models.Contract{}).Where("status = ?", models.StatusDraft).Count(&stats.DraftContracts)
+	models.DB.Model(&models.Contract{}).Where("status = ?", models.StatusTerminated).Count(&stats.TerminatedContracts)
 
 	var totalAmount *float64
 	models.DB.Model(&models.Contract{}).Where("amount IS NOT NULL").Select("SUM(amount)").Scan(&totalAmount)

@@ -27,7 +27,7 @@ func (h *WorkflowHandler) GetWorkflow(c *gin.Context) {
 		return
 	}
 
-	workflow, err := h.workflowService.GetWorkflowByContractID(uint(contractID))
+	workflow, err := h.workflowService.GetWorkflowByContractID(contractID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Workflow not found"})
 		return
@@ -70,7 +70,7 @@ func (h *WorkflowHandler) Approve(c *gin.Context) {
 
 	userID := c.GetUint("user_id")
 
-	err := h.workflowService.Approve(input.WorkflowID, 0, input.Level, userID, input.Comment)
+	err := h.workflowService.Approve(input.WorkflowID, 0, input.Level, uint64(userID), input.Comment)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to approve"})
 		return
@@ -93,7 +93,7 @@ func (h *WorkflowHandler) Reject(c *gin.Context) {
 
 	userID := c.GetUint("user_id")
 
-	err := h.workflowService.Reject(input.WorkflowID, input.Level, userID, input.Comment)
+	err := h.workflowService.Reject(input.WorkflowID, input.Level, uint64(userID), input.Comment)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reject"})
 		return
@@ -102,14 +102,14 @@ func (h *WorkflowHandler) Reject(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Rejected successfully"})
 }
 
-func (h *WorkflowHandler) GetMyPendingApprovals(c *gin.Context) {
+func (h *WorkflowHandler) GetMyPendingApproval(c *gin.Context) {
 	user, exists := c.Get("user")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
 
-	approvals, err := h.workflowService.GetPendingApprovals(user.(*models.User).Role)
+	approvals, err := h.workflowService.GetPendingApprovals(string(user.(*models.User).Role))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get pending approvals"})
 		return

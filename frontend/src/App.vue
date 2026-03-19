@@ -67,17 +67,152 @@ body {
 .el-button {
   font-weight: 500;
   transition: all 0.2s ease;
+  border-radius: 8px;
+  padding: 10px 20px;
+}
+
+.el-button + .el-button {
+  margin-left: 8px;
 }
 
 .el-button--primary {
   background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
   border: none;
+  color: #fff;
 }
 
 .el-button--primary:hover {
   background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.el-button--success {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  border: none;
+  color: #fff;
+}
+
+.el-button--success:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.el-button--warning {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+  border: none;
+  color: #fff;
+}
+
+.el-button--warning:hover {
+  background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.el-button--danger {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  border: none;
+  color: #fff;
+}
+
+.el-button--danger:hover {
+  background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.el-button--default {
+  border: 1px solid #E2E8F0;
+  background: #fff;
+  color: #64748B;
+}
+
+.el-button--default:hover {
+  border-color: #CBD5E1;
+  color: #475569;
+  background: #F8FAFC;
+}
+
+.el-button--small {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+.el-button--large {
+  padding: 12px 24px;
+  font-size: 15px;
+  border-radius: 10px;
+}
+
+/* 文字链接按钮样式 */
+.el-button.is-link {
+  padding: 6px 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  margin: 0 4px;
+  font-size: 14px;
+}
+
+.el-button.is-link:hover {
+  background: rgba(99, 102, 241, 0.08);
+}
+
+.el-button.is-link.is-danger:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.el-button.is-link.is-warning:hover {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.el-button.is-link.is-success:hover {
+  background: rgba(16, 185, 129, 0.08);
+}
+
+/* 主要链接按钮 */
+.el-button--primary.is-link {
+  color: #6366F1;
+}
+
+/* 成功链接按钮 */
+.el-button--success.is-link {
+  color: #10B981;
+}
+
+/* 警告链接按钮 */
+.el-button--warning.is-link {
+  color: #F59E0B;
+}
+
+/* 危险链接按钮 */
+.el-button--danger.is-link {
+  color: #EF4444;
+}
+
+/* 信息链接按钮 */
+.el-button--info.is-link {
+  color: #94A3B8;
+}
+
+/* 卡片头部样式 */
+.el-card__header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #F1F5F9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 对话框底部按钮 */
+.el-dialog__footer {
+  padding: 16px 24px 20px;
+  border-top: 1px solid #F1F5F9;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 
 /* 卡片样式 */

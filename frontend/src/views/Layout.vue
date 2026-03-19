@@ -24,35 +24,67 @@
           class="sidebar-menu"
         >
           <el-menu-item index="/dashboard">
-            <el-icon><Odometer /></el-icon>
-            <span>仪表盘</span>
+            <div class="menu-item-content">
+              <el-icon><Odometer /></el-icon>
+              <span>仪表盘</span>
+            </div>
           </el-menu-item>
           <el-menu-item index="/contracts">
-            <el-icon><Document /></el-icon>
-            <span>合同管理</span>
-            <el-badge v-if="notificationCounts.expiringContracts > 0" :value="notificationCounts.expiringContracts" :max="99" class="menu-badge" />
+            <div class="menu-item-content">
+              <el-icon><Document /></el-icon>
+              <span>合同管理</span>
+              <el-badge 
+                v-if="notificationCounts.expiringContracts > 0" 
+                :value="notificationCounts.expiringContracts" 
+                :max="99" 
+                class="menu-badge-icon"
+                type="warning"
+              />
+            </div>
           </el-menu-item>
           <el-menu-item index="/customers">
-            <el-icon><OfficeBuilding /></el-icon>
-            <span>客户管理</span>
+            <div class="menu-item-content">
+              <el-icon><OfficeBuilding /></el-icon>
+              <span>客户管理</span>
+            </div>
           </el-menu-item>
           <el-menu-item index="/approvals">
-            <el-icon><Checked /></el-icon>
-            <span>审批管理</span>
-            <el-badge v-if="notificationCounts.pendingApprovals + notificationCounts.pendingStatusChanges > 0" :value="notificationCounts.pendingApprovals + notificationCounts.pendingStatusChanges" :max="99" class="menu-badge" />
+            <div class="menu-item-content">
+              <el-icon><Checked /></el-icon>
+              <span>审批管理</span>
+              <el-badge 
+                v-if="notificationCounts.pendingApprovals + notificationCounts.pendingStatusChanges > 0" 
+                :value="notificationCounts.pendingApprovals + notificationCounts.pendingStatusChanges" 
+                :max="99" 
+                class="menu-badge-icon"
+                type="danger"
+              />
+            </div>
           </el-menu-item>
           <el-menu-item index="/reminders">
-            <el-icon><Bell /></el-icon>
-            <span>到期提醒</span>
-            <el-badge v-if="notificationCounts.expiringContracts > 0" :value="notificationCounts.expiringContracts" :max="99" class="menu-badge" />
+            <div class="menu-item-content">
+              <el-icon><Bell /></el-icon>
+              <span>到期提醒</span>
+              <el-badge 
+                v-if="notificationCounts.expiringContracts > 0" 
+                :value="notificationCounts.expiringContracts" 
+                :max="99" 
+                class="menu-badge-icon"
+                type="warning"
+              />
+            </div>
           </el-menu-item>
           <el-menu-item index="/users">
-            <el-icon><UserFilled /></el-icon>
-            <span>用户管理</span>
+            <div class="menu-item-content">
+              <el-icon><UserFilled /></el-icon>
+              <span>用户管理</span>
+            </div>
           </el-menu-item>
           <el-menu-item v-if="isAuditAdmin" index="/audit">
-            <el-icon><Document /></el-icon>
-            <span>审计日志</span>
+            <div class="menu-item-content">
+              <el-icon><Document /></el-icon>
+              <span>审计日志</span>
+            </div>
           </el-menu-item>
         </el-menu>
         
@@ -80,6 +112,16 @@
         </div>
         
         <div class="header-right">
+          <div class="header-notifications" @click="handleNotificationClick">
+            <el-badge 
+              :value="totalNotifications" 
+              :hidden="totalNotifications === 0"
+              :max="99"
+              type="danger"
+            >
+              <el-icon :size="20"><Bell /></el-icon>
+            </el-badge>
+          </div>
           <el-dropdown @command="handleCommand" trigger="click">
             <div class="user-dropdown">
               <el-avatar :size="32" class="header-avatar">
@@ -135,6 +177,11 @@ const isAuditAdmin = computed(() => {
   return role === 'admin' || role === 'audit_admin'
 })
 
+const totalNotifications = computed(() => {
+  const { pendingApprovals, pendingStatusChanges, expiringContracts } = notificationCounts.value
+  return pendingApprovals + pendingStatusChanges + expiringContracts
+})
+
 const notificationCounts = ref({
   pendingApprovals: 0,
   pendingStatusChanges: 0,
@@ -176,6 +223,10 @@ const routeNames = {
 }
 
 const currentRoute = computed(() => routeNames[route.path])
+
+const handleNotificationClick = () => {
+  router.push('/approvals')
+}
 
 const handleCommand = (command) => {
   if (command === 'profile') {
@@ -252,6 +303,34 @@ const handleCommand = (command) => {
   padding: 12px 0;
 }
 
+.menu-item-content {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.menu-item-content .el-icon {
+  margin-right: 12px;
+  font-size: 18px;
+  position: relative;
+}
+
+.menu-badge-icon {
+  position: absolute;
+  right: 10px;
+  top: -6px;
+  transform: translateY(-50%);
+}
+
+.menu-badge-icon :deep(.el-badge__content) {
+  border: none;
+  font-size: 11px;
+  padding: 0 5px;
+  height: 18px;
+  line-height: 18px;
+}
+
 :deep(.el-menu-item) {
   height: 48px;
   margin: 4px 12px;
@@ -259,7 +338,7 @@ const handleCommand = (command) => {
   color: #64748B;
   font-weight: 500;
   transition: all 0.2s ease;
-  position: relative;
+  padding: 0 20px !important;
 }
 
 .menu-badge {
@@ -282,49 +361,23 @@ const handleCommand = (command) => {
   color: #6366F1;
 }
 
-:deep(.el-menu-item .el-icon) {
-  margin-right: 12px;
-  font-size: 18px;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
 }
 
-.sidebar-footer {
-  padding: 16px;
-  border-top: 1px solid #F1F5F9;
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
-.user-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: #F8FAFC;
-  border-radius: 12px;
-}
-
-.user-avatar {
-  background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
-  color: white;
-  font-weight: 600;
+:deep(.el-dropdown-menu__item) {
+  padding: 10px 20px;
   font-size: 14px;
 }
 
-.user-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.user-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #1E293B;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-role {
-  font-size: 12px;
-  color: #94A3B8;
+:deep(.el-dropdown-menu__item .el-icon) {
+  margin-right: 8px;
 }
 
 .el-header {
@@ -341,22 +394,29 @@ const handleCommand = (command) => {
   align-items: center;
 }
 
-:deep(.el-breadcrumb__item) {
-  font-size: 14px;
-}
-
-:deep(.el-breadcrumb__inner) {
-  color: #94A3B8;
-}
-
-:deep(.el-breadcrumb__item:last-child .el-breadcrumb__inner) {
-  color: #1E293B;
-  font-weight: 500;
-}
-
 .header-right {
   display: flex;
   align-items: center;
+  gap: 16px;
+}
+
+.header-notifications {
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.header-notifications:hover {
+  background: #F8FAFC;
+}
+
+.header-notifications .el-icon {
+  color: #64748B;
+}
+
+.header-notifications:hover .el-icon {
+  color: #6366F1;
 }
 
 .user-dropdown {
@@ -384,29 +444,5 @@ const handleCommand = (command) => {
   color: #1E293B;
   font-weight: 500;
   font-size: 14px;
-}
-
-.el-main {
-  background: #F8FAFC;
-  padding: 24px;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-:deep(.el-dropdown-menu__item) {
-  padding: 10px 20px;
-  font-size: 14px;
-}
-
-:deep(.el-dropdown-menu__item .el-icon) {
-  margin-right: 8px;
 }
 </style>

@@ -1,0 +1,727 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "安信合同管理系统 API",
+    "description": "基于 Go + Gin + MySQL 的合同管理系统 RESTful API 文档",
+    "version": "1.0.0",
+    "contact": {
+      "name": "API Support"
+    }
+  },
+  "host": "localhost:8000",
+  "basePath": "/",
+  "produces": ["application/json"],
+  "consumes": ["application/json"],
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "JWT Token. Example: \"Bearer {token}\""
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "健康检查",
+        "description": "检查服务是否正常运行",
+        "tags": ["公共接口"],
+        "responses": {
+          "200": {
+            "description": "服务正常",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {"type": "string", "example": "healthy"},
+                "time": {"type": "integer", "example": 1704067200}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "summary": "用户注册",
+        "description": "注册新用户账号",
+        "tags": ["用户管理"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["username", "password"],
+              "properties": {
+                "username": {"type": "string", "example": "testuser"},
+                "email": {"type": "string", "example": "test@example.com"},
+                "password": {"type": "string", "example": "password123"},
+                "full_name": {"type": "string", "example": "张三"},
+                "role": {"type": "string", "enum": ["user", "manager", "admin"], "default": "user"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "注册成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {"type": "integer"},
+                "username": {"type": "string"},
+                "email": {"type": "string"},
+                "message": {"type": "string"}
+              }
+            }
+          },
+          "400": {
+            "description": "请求参数错误",
+            "schema": {"type": "object", "properties": {"error": {"type": "string"}}}
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "用户登录",
+        "description": "使用用户名密码登录获取JWT Token",
+        "tags": ["用户管理"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["username", "password"],
+              "properties": {
+                "username": {"type": "string", "example": "admin"},
+                "password": {"type": "string", "example": "admin123"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "登录成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "access_token": {"type": "string"},
+                "token_type": {"type": "string", "example": "bearer"},
+                "user_info": {
+                  "type": "object",
+                  "properties": {
+                    "id": {"type": "integer"},
+                    "username": {"type": "string"},
+                    "email": {"type": "string"},
+                    "full_name": {"type": "string"},
+                    "role": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "用户名或密码错误",
+            "schema": {"type": "object", "properties": {"error": {"type": "string"}}}
+          }
+        }
+      }
+    },
+    "/api/auth/users": {
+      "get": {
+        "summary": "获取用户列表",
+        "description": "分页获取所有用户信息",
+        "tags": ["用户管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "query", "name": "skip", "type": "integer", "description": "跳过记录数", "default": 0},
+          {"in": "query", "name": "limit", "type": "integer", "description": "返回记录数", "default": 20}
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {"type": "integer"},
+                  "username": {"type": "string"},
+                  "email": {"type": "string"},
+                  "full_name": {"type": "string"},
+                  "role": {"type": "string"},
+                  "is_active": {"type": "boolean"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/users/{user_id}": {
+      "get": {
+        "summary": "获取用户详情",
+        "tags": ["用户管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "user_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "200": {"description": "成功"},
+          "404": {"description": "用户不存在"}
+        }
+      },
+      "put": {
+        "summary": "更新用户信息",
+        "tags": ["用户管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "user_id", "type": "integer", "required": true},
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "full_name": {"type": "string"},
+                "email": {"type": "string"},
+                "role": {"type": "string"},
+                "is_active": {"type": "boolean"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {"description": "更新成功"}
+        }
+      },
+      "delete": {
+        "summary": "删除用户",
+        "tags": ["用户管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "user_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "204": {"description": "删除成功"}
+        }
+      }
+    },
+    "/api/customers": {
+      "get": {
+        "summary": "获取客户列表",
+        "tags": ["客户管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "query", "name": "skip", "type": "integer"},
+          {"in": "query", "name": "limit", "type": "integer"},
+          {"in": "query", "name": "type", "type": "string", "enum": ["customer", "supplier"]}
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      },
+      "post": {
+        "summary": "创建客户",
+        "tags": ["客户管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": ["name", "code"],
+              "properties": {
+                "name": {"type": "string", "example": "测试客户"},
+                "code": {"type": "string", "example": "C001"},
+                "type": {"type": "string", "enum": ["customer", "supplier"]},
+                "contact_person": {"type": "string"},
+                "contact_phone": {"type": "string"},
+                "contact_email": {"type": "string"},
+                "credit_rating": {"type": "string"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {"description": "创建成功"}
+        }
+      }
+    },
+    "/api/customers/{customer_id}": {
+      "get": {
+        "summary": "获取客户详情",
+        "tags": ["客户管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "customer_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      },
+      "put": {
+        "summary": "更新客户",
+        "tags": ["客户管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "customer_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      },
+      "delete": {
+        "summary": "删除客户",
+        "tags": ["客户管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "customer_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "204": {"description": "删除成功"}
+        }
+      }
+    },
+    "/api/contract-types": {
+      "get": {
+        "summary": "获取合同类型列表",
+        "tags": ["客户管理"],
+        "security": [{"Bearer": []}],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      },
+      "post": {
+        "summary": "创建合同类型",
+        "tags": ["客户管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": ["name", "code"],
+              "properties": {
+                "name": {"type": "string"},
+                "code": {"type": "string"},
+                "description": {"type": "string"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {"description": "创建成功"}
+        }
+      }
+    },
+    "/api/contracts": {
+      "get": {
+        "summary": "获取合同列表",
+        "tags": ["合同管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "query", "name": "skip", "type": "integer"},
+          {"in": "query", "name": "limit", "type": "integer"},
+          {"in": "query", "name": "customer_id", "type": "integer"},
+          {"in": "query", "name": "contract_type_id", "type": "integer"},
+          {"in": "query", "name": "status", "type": "string"}
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      },
+      "post": {
+        "summary": "创建合同",
+        "tags": ["合同管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": ["title", "customer_id", "contract_type_id"],
+              "properties": {
+                "title": {"type": "string"},
+                "customer_id": {"type": "integer"},
+                "contract_type_id": {"type": "integer"},
+                "amount": {"type": "number"},
+                "currency": {"type": "string", "default": "CNY"},
+                "sign_date": {"type": "string", "format": "date"},
+                "start_date": {"type": "string", "format": "date"},
+                "end_date": {"type": "string", "format": "date"},
+                "payment_terms": {"type": "string"},
+                "content": {"type": "string"},
+                "notes": {"type": "string"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {"description": "创建成功"}
+        }
+      }
+    },
+    "/api/contracts/{contract_id}": {
+      "get": {
+        "summary": "获取合同详情",
+        "tags": ["合同管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "contract_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      },
+      "put": {
+        "summary": "更新合同",
+        "tags": ["合同管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "contract_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      },
+      "delete": {
+        "summary": "删除合同",
+        "tags": ["合同管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "contract_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "204": {"description": "删除成功"}
+        }
+      }
+    },
+    "/api/contracts/{contract_id}/status": {
+      "put": {
+        "summary": "更新合同状态",
+        "description": "直接更新合同状态（部分状态需要审批）",
+        "tags": ["合同管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "contract_id", "type": "integer", "required": true},
+          {
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {"type": "string", "enum": ["draft", "pending", "approved", "active", "in_progress", "pending_pay", "completed", "terminated", "archived"]}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      }
+    },
+    "/api/contracts/{contract_id}/status-change": {
+      "post": {
+        "summary": "申请状态变更",
+        "description": "申请需要审批的状态变更（archived, terminated, in_progress, pending_pay）",
+        "tags": ["合同管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "contract_id", "type": "integer", "required": true},
+          {
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "required": ["to_status"],
+              "properties": {
+                "to_status": {"type": "string"},
+                "reason": {"type": "string"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "direct": {"type": "boolean"},
+                "request": {"type": "object"},
+                "contract": {"type": "object"}
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "获取状态变更记录",
+        "tags": ["合同管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "contract_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      }
+    },
+    "/api/contracts/{contract_id}/executions": {
+      "get": {
+        "summary": "获取执行记录",
+        "tags": ["合同管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "contract_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      },
+      "post": {
+        "summary": "创建执行记录",
+        "tags": ["合同管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "contract_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "201": {"description": "成功"}
+        }
+      }
+    },
+    "/api/contracts/{contract_id}/documents": {
+      "get": {
+        "summary": "获取文档列表",
+        "tags": ["合同管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "contract_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      },
+      "post": {
+        "summary": "上传文档",
+        "tags": ["合同管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "contract_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "201": {"description": "成功"}
+        }
+      }
+    },
+    "/api/contracts/{contract_id}/lifecycle": {
+      "get": {
+        "summary": "获取生命周期事件",
+        "tags": ["合同管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "contract_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      }
+    },
+    "/api/pending-approvals": {
+      "get": {
+        "summary": "获取待审批列表",
+        "tags": ["审批管理"],
+        "security": [{"Bearer": []}],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      }
+    },
+    "/api/pending-status-changes": {
+      "get": {
+        "summary": "获取待审批状态变更列表",
+        "tags": ["审批管理"],
+        "security": [{"Bearer": []}],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      }
+    },
+    "/api/status-change-requests/{request_id}/approve": {
+      "post": {
+        "summary": "审批通过状态变更",
+        "tags": ["审批管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "request_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      }
+    },
+    "/api/status-change-requests/{request_id}/reject": {
+      "post": {
+        "summary": "拒绝状态变更",
+        "tags": ["审批管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "path", "name": "request_id", "type": "integer", "required": true}
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      }
+    },
+    "/api/expiring-contracts": {
+      "get": {
+        "summary": "获取即将到期合同",
+        "tags": ["审批管理"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "query", "name": "days", "type": "integer", "description": "多少天内到期", "default": 30}
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      }
+    },
+    "/api/statistics": {
+      "get": {
+        "summary": "获取统计数据",
+        "tags": ["审批管理"],
+        "security": [{"Bearer": []}],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "total_contracts": {"type": "integer"},
+                "active_contracts": {"type": "integer"},
+                "pending_contracts": {"type": "integer"},
+                "completed_contracts": {"type": "integer"},
+                "total_amount": {"type": "number"},
+                "this_month_contracts": {"type": "integer"},
+                "this_month_amount": {"type": "number"},
+                "expiring_soon": {"type": "integer"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notifications/count": {
+      "get": {
+        "summary": "获取待办数量",
+        "tags": ["审批管理"],
+        "security": [{"Bearer": []}],
+        "responses": {
+          "200": {
+            "description": "成功",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "pendingApprovals": {"type": "integer"},
+                "pendingStatusChanges": {"type": "integer"},
+                "expiringContracts": {"type": "integer"},
+                "total": {"type": "integer"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/audit-logs": {
+      "get": {
+        "summary": "获取审计日志",
+        "tags": ["审计日志"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"in": "query", "name": "skip", "type": "integer"},
+          {"in": "query", "name": "limit", "type": "integer"}
+        ],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      }
+    },
+    "/api/audit-logs/export": {
+      "get": {
+        "summary": "导出审计日志",
+        "tags": ["审计日志"],
+        "security": [{"Bearer": []}],
+        "responses": {
+          "200": {"description": "成功"}
+        }
+      }
+    }
+  },
+  "definitions": {
+    "User": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "integer"},
+        "username": {"type": "string"},
+        "email": {"type": "string"},
+        "full_name": {"type": "string"},
+        "role": {"type": "string"},
+        "department": {"type": "string"},
+        "phone": {"type": "string"},
+        "is_active": {"type": "boolean"},
+        "created_at": {"type": "string", "format": "date-time"}
+      }
+    },
+    "Customer": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "integer"},
+        "name": {"type": "string"},
+        "type": {"type": "string"},
+        "code": {"type": "string"},
+        "contact_person": {"type": "string"},
+        "contact_phone": {"type": "string"},
+        "contact_email": {"type": "string"},
+        "credit_rating": {"type": "string"},
+        "is_active": {"type": "boolean"}
+      }
+    },
+    "Contract": {
+      "type": "object",
+      "properties": {
+        "id": {"type": "integer"},
+        "contract_no": {"type": "string"},
+        "title": {"type": "string"},
+        "customer_id": {"type": "integer"},
+        "contract_type_id": {"type": "integer"},
+        "amount": {"type": "number"},
+        "currency": {"type": "string"},
+        "status": {"type": "string"},
+        "sign_date": {"type": "string", "format": "date"},
+        "start_date": {"type": "string", "format": "date"},
+        "end_date": {"type": "string", "format": "date"},
+        "payment_terms": {"type": "string"},
+        "content": {"type": "string"},
+        "notes": {"type": "string"}
+      }
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "error": {"type": "string"}
+      }
+    }
+  },
+  "tags": [
+    {"name": "公共接口", "description": "无需认证的公共接口"},
+    {"name": "用户管理", "description": "用户注册、登录、信息管理"},
+    {"name": "客户管理", "description": "客户和合同类型管理"},
+    {"name": "合同管理", "description": "合同完整生命周期管理"},
+    {"name": "审批管理", "description": "合同审批和提醒管理"},
+    {"name": "审计日志", "description": "系统操作审计日志"}
+  ]
+}

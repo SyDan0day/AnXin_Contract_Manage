@@ -589,11 +589,17 @@ func main() {
 	// 静态文件服务 - 上传的文件
 	r.Static("/uploads", "./uploads")
 
+	// Swagger文档
+	r.Static("/docs", "./docs")
+	r.GET("/api-docs", func(c *gin.Context) {
+		c.HTML(200, "", gin.H{})
+	})
+
 	authHandler := handlers.NewAuthHandler()
 	customerHandler := handlers.NewCustomerHandler()
 	contractHandler := handlers.NewContractHandler()
 	approvalHandler := handlers.NewApprovalHandler()
-	workflowHandler := handlers.NewWorkflowHandler()
+	workflowHandler := handlers.NewWorkflowHandler(models.DB)
 	auditHandler := handlers.NewAuditHandler()
 
 	auth := r.Group("/api/auth")
@@ -678,5 +684,6 @@ func main() {
 
 	addr := ":8000"
 	fmt.Printf("API 调试页面: http://localhost%s\n", addr)
+	fmt.Printf("Swagger 文档: http://localhost%s/docs/swagger.html\n", addr)
 	r.Run(addr)
 }

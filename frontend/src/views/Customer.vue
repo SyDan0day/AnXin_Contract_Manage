@@ -35,10 +35,16 @@
             <el-table-column prop="contact_person" label="联系人" width="100" />
             <el-table-column prop="contact_phone" label="联系电话" width="130" />
             <el-table-column prop="credit_rating" label="信用等级" width="100" />
-            <el-table-column label="操作" width="150" fixed="right">
+            <el-table-column label="操作" width="180" fixed="right">
               <template #default="{ row }">
-                <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
-                <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+                <div class="action-buttons">
+                  <el-button type="warning" link @click="handleEdit(row)">
+                    <el-icon><Edit /></el-icon> 编辑
+                  </el-button>
+                  <el-button type="danger" link @click="handleDelete(row)">
+                    <el-icon><Delete /></el-icon> 删除
+                  </el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -68,10 +74,16 @@
             <el-table-column prop="name" label="类型名称" />
             <el-table-column prop="description" label="描述" />
             <el-table-column prop="created_at" label="创建时间" width="180" />
-            <el-table-column label="操作" width="150" fixed="right">
+            <el-table-column label="操作" width="180" fixed="right">
               <template #default="{ row }">
-                <el-button type="primary" link @click="handleEditType(row)">编辑</el-button>
-                <el-button type="danger" link @click="handleDeleteType(row)">删除</el-button>
+                <div class="action-buttons">
+                  <el-button type="warning" link @click="handleEditType(row)">
+                    <el-icon><Edit /></el-icon> 编辑
+                  </el-button>
+                  <el-button type="danger" link @click="handleDeleteType(row)">
+                    <el-icon><Delete /></el-icon> 删除
+                  </el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -116,8 +128,10 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSubmit">确定</el-button>
+        </div>
       </template>
     </el-dialog>
 
@@ -134,8 +148,10 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="typeDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleTypeSubmit">确定</el-button>
+        <div class="dialog-footer">
+          <el-button @click="typeDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleTypeSubmit">确定</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -144,6 +160,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Edit, Delete } from '@element-plus/icons-vue'
 import { getCustomerList, createCustomer, updateCustomer, deleteCustomer, getContractTypeList, createContractType, updateContractType, deleteContractType } from '@/api/customer'
 
 const activeTab = ref('customers')
@@ -345,7 +362,30 @@ onMounted(() => {
 .toolbar {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 16px;
+  gap: 16px;
+}
+
+.toolbar .el-form {
+  flex: 1;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-buttons .el-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 </style>

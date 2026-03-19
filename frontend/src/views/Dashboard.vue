@@ -67,8 +67,8 @@
                 <el-icon :size="22"><Document /></el-icon>
               </div>
               <div class="overview-content">
-                <div class="overview-value">{{ statistics.this_month_contracts || 0 }}</div>
-                <div class="overview-label">新增合同</div>
+                <div class="overview-value">{{ statistics.this_month_contracts }}</div>
+                <div class="overview-label">本月新增</div>
               </div>
             </div>
             <div class="overview-item">
@@ -77,7 +77,7 @@
               </div>
               <div class="overview-content">
                 <div class="overview-value">¥{{ formatAmount(statistics.this_month_amount) }}</div>
-                <div class="overview-label">合同金额</div>
+                <div class="overview-label">本月金额</div>
               </div>
             </div>
             <div class="overview-item">
@@ -85,7 +85,7 @@
                 <el-icon :size="22"><CircleCheck /></el-icon>
               </div>
               <div class="overview-content">
-                <div class="overview-value">{{ statistics.active_contracts || 0 }}</div>
+                <div class="overview-value">{{ statistics.active_contracts }}</div>
                 <div class="overview-label">进行中</div>
               </div>
             </div>
@@ -94,7 +94,7 @@
                 <el-icon :size="22"><Warning /></el-icon>
               </div>
               <div class="overview-content">
-                <div class="overview-value">{{ statistics.expiring_soon || 0 }}</div>
+                <div class="overview-value">{{ statistics.expiring_soon }}</div>
                 <div class="overview-label">即将到期</div>
               </div>
             </div>
@@ -112,7 +112,7 @@
                 <el-icon><WarningFilled /></el-icon>
                 即将到期合同
               </span>
-              <el-button type="primary" link @click="$router.push('/reminders')">
+              <el-button type="primary" size="small" @click="$router.push('/reminders')">
                 查看全部 <el-icon><ArrowRight /></el-icon>
               </el-button>
             </div>
@@ -150,7 +150,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import * as echarts from 'echarts'
@@ -162,10 +162,22 @@ import {
 
 const router = useRouter()
 const userStore = useUserStore()
-const chartType = ref('bar')
-const statistics = ref({})
-const expiringContracts = ref([])
 const chartRef = ref(null)
+const chartType = ref('bar')
+const chartInstance = ref(null)
+const expiringContracts = ref([])
+const statistics = ref({
+  total_contracts: 0,
+  active_contracts: 0,
+  pending_contracts: 0,
+  completed_contracts: 0,
+  draft_contracts: 0,
+  terminated_contracts: 0,
+  this_month_contracts: 0,
+  this_month_amount: 0,
+  expiring_soon: 0,
+  total_amount: 0
+})
 
 const statsCards = computed(() => [
   {
@@ -228,8 +240,25 @@ const isExpiringSoon = (date) => {
 const loadStatistics = async () => {
   try {
     const data = await getStatistics()
-    statistics.value = data
-    initChart()
+    console.log('API返回数据:', data)
+    if (data) {
+      statistics.value = {
+        total_contracts: data.total_contracts ?? 0,
+        active_contracts: data.active_contracts ?? 0,
+        pending_contracts: data.pending_contracts ?? 0,
+        completed_contracts: data.completed_contracts ?? 0,
+        draft_contracts: data.draft_contracts ?? 0,
+        terminated_contracts: data.terminated_contracts ?? 0,
+        this_month_contracts: data.this_month_contracts ?? 0,
+        this_month_amount: data.this_month_amount ?? 0,
+        expiring_soon: data.expiring_soon ?? 0,
+        total_amount: data.total_amount ?? 0
+      }
+      console.log('统计数据显示:', statistics.value)
+      nextTick(() => {
+        initChart()
+      })
+    }
   } catch (error) {
     console.error('加载统计数据失败:', error)
   }
@@ -247,43 +276,138 @@ const loadExpiringContracts = async () => {
 const initChart = () => {
   if (!chartRef.value) return
   
-  const chart = echarts.init(chartRef.value)
+  if (chartInstance.value) {
+    chartInstance.value.dispose()
+  }
   
-  const option = chartType.value === 'pie' ? getPieOption() : getBarOption()
-  chart.setOption(option)
-  window.addEventListener('resize', () => chart.resize())
+  chartInstance.value = echarts.init(chartRef.value)
+  
+  let option
+  if (chartType.value === 'pie') {
+    option = getPieOption()
+  } else {
+    option = getBarOption()
+  }
+  
+  chartInstance.value.setOption(option)
+  
+  chartInstance.value.off('click')
+  chartInstance.value.on('click', (params) => {
+    if (chartType.value === 'pie') {
+      const statusMap = {
+        '进行中': 'active',
+        '待审批': 'pending',
+        '已完成': 'completed',
+        '草稿': 'draft',
+        '已终止': 'terminated'
+      }
+      const status = statusMap[params.name]
+      if (status) {
+        router.push({ path: '/contracts', query: { status } })
+      }
+    } else {
+      const barStatusMap = {
+        '进行中': 'active',
+        '待审批': 'pending',
+        '已完成': 'completed',
+        '草稿': 'draft',
+        '已终止': 'terminated'
+      }
+      const status = barStatusMap[params.name]
+      if (status) {
+        router.push({ path: '/contracts', query: { status } })
+      }
+    }
+  })
+  
+  window.addEventListener('resize', () => {
+    if (chartInstance.value) {
+      chartInstance.value.resize()
+    }
+  })
 }
 
+watch(chartType, () => {
+  if (chartInstance.value) {
+    initChart()
+  }
+})
+
+watch(statistics, () => {
+  if (chartInstance.value) {
+    initChart()
+  }
+}, { deep: true })
+
 const getPieOption = () => ({
-  tooltip: { trigger: 'item', formatter: '¥{c}' },
-  legend: { orient: 'vertical', right: 10, top: 'center' },
-  color: ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#94A3B8'],
+  tooltip: { 
+    trigger: 'item', 
+    formatter: '{b}: {c} 个'
+  },
+  legend: { 
+    orient: 'vertical', 
+    right: 20, 
+    top: 'center',
+    textStyle: { color: '#64748B', fontSize: 13 }
+  },
+  color: ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#94A3B8', '#EC4899', '#8B5CF6', '#14B8A6'],
+  graphic: [{
+    type: 'text',
+    left: 'center',
+    top: '38%',
+    z: 100,
+    style: {
+      text: String(statistics.value.total_contracts || 0),
+      textAlign: 'center',
+      fill: '#1E293B',
+      fontSize: 32,
+      fontWeight: 'bold'
+    }
+  }, {
+    type: 'text',
+    left: 'center',
+    top: '52%',
+    z: 100,
+    style: {
+      text: '合同总数',
+      textAlign: 'center',
+      fill: '#94A3B8',
+      fontSize: 14
+    }
+  }],
   series: [{
     type: 'pie',
-    radius: ['40%', '70%'],
-    center: ['40%', '50%'],
+    radius: ['45%', '70%'],
+    center: ['50%', '50%'],
     avoidLabelOverlap: false,
-    itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
+    itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
     label: { show: false },
     emphasis: {
-      label: { show: true, fontSize: 16, fontWeight: 'bold' },
-      itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.3)' }
+      scaleSize: 6,
+      label: { show: true, fontSize: 13, fontWeight: 'bold' },
+      itemStyle: { shadowBlur: 12, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.15)' }
     },
     data: [
-      { value: statistics.value.total_amount || 0, name: '总金额' },
-      { value: statistics.value.this_month_amount || 0, name: '本月金额' }
+      { value: statistics.value.active_contracts || 0, name: '进行中' },
+      { value: statistics.value.pending_contracts || 0, name: '待审批' },
+      { value: statistics.value.completed_contracts || 0, name: '已完成' },
+      { value: statistics.value.draft_contracts || 0, name: '草稿' },
+      { value: statistics.value.terminated_contracts || 0, name: '已终止' }
     ]
   }]
 })
 
 const getBarOption = () => ({
-  tooltip: { trigger: 'axis' },
+  tooltip: { 
+    trigger: 'axis',
+    formatter: '{b}: {c} 个合同' 
+  },
   grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
   xAxis: { 
     type: 'category', 
-    data: ['1月', '2月', '3月', '4月', '5月', '6月'],
+    data: ['进行中', '待审批', '已完成', '草稿', '已终止'],
     axisLine: { lineStyle: { color: '#E2E8F0' } },
-    axisLabel: { color: '#64748B' }
+    axisLabel: { color: '#64748B', fontSize: 12 }
   },
   yAxis: { 
     type: 'value',
@@ -292,15 +416,29 @@ const getBarOption = () => ({
     splitLine: { lineStyle: { color: '#F1F5F9' } }
   },
   series: [{
-    data: [12, 15, 8, 20, 16, statistics.value.this_month_contracts || 0],
+    data: [
+      statistics.value.active_contracts || 0,
+      statistics.value.pending_contracts || 0,
+      statistics.value.completed_contracts || 0,
+      statistics.value.draft_contracts || 0,
+      statistics.value.terminated_contracts || 0
+    ],
     type: 'bar',
     barWidth: '50%',
     itemStyle: {
-      borderRadius: [8, 8, 0, 0],
+      borderRadius: [6, 6, 0, 0],
       color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
         { offset: 0, color: '#6366F1' },
         { offset: 1, color: '#8B5CF6' }
       ])
+    },
+    emphasis: {
+      itemStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: '#4F46E5' },
+          { offset: 1, color: '#7C3AED' }
+        ])
+      }
     }
   }]
 })
@@ -316,6 +454,13 @@ const createContract = () => {
 onMounted(async () => {
   await loadStatistics()
   await loadExpiringContracts()
+})
+
+onUnmounted(() => {
+  if (chartInstance.value) {
+    chartInstance.value.dispose()
+    chartInstance.value = null
+  }
 })
 </script>
 
@@ -444,6 +589,7 @@ onMounted(async () => {
   justify-content: space-between;
   font-weight: 600;
   font-size: 15px;
+  width: 100%;
 }
 
 .card-header span {
@@ -451,6 +597,15 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   color: #1E293B;
+}
+
+.card-header .el-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
 }
 
 .overview-grid {

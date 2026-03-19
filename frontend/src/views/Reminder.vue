@@ -35,7 +35,9 @@
         </el-table-column>
         <el-table-column label="操作" width="150" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link @click="handleCreateReminder(row)">创建提醒</el-button>
+            <el-button type="primary" link @click="handleCreateReminder(row)">
+              <el-icon><Bell /></el-icon> 创建提醒
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -66,8 +68,10 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleSubmit">确定</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -76,6 +80,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Bell } from '@element-plus/icons-vue'
 import { getExpiringContracts, createReminder } from '@/api/approval'
 
 const formatDate = (dateStr) => {
@@ -145,5 +150,17 @@ onMounted(() => {
 <style scoped>
 .reminder-page {
   padding: 20px;
+}
+
+.reminder-page .el-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
 }
 </style>

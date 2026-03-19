@@ -4,15 +4,17 @@
       <template #header>
         <div class="card-header">
           <span>审计日志</span>
-          <div>
-            <el-button type="primary" @click="handleExport">导出</el-button>
+          <div class="header-actions">
+            <el-button type="primary" @click="handleExport">
+              <el-icon><Download /></el-icon> 导出
+            </el-button>
             <el-button 
               v-if="isAuditAdmin" 
               type="danger" 
               :disabled="selectedLogs.length === 0"
               @click="handleBatchDelete"
             >
-              批量删除
+              <el-icon><Delete /></el-icon> 批量删除
             </el-button>
           </div>
         </div>
@@ -115,6 +117,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/store/user'
 import { getAuditLogs, deleteAuditLog, deleteAuditLogs } from '@/api/audit'
+import { Download, Delete } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
 const isAuditAdmin = computed(() => {
@@ -285,6 +288,24 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
+}
+
+.card-header span {
+  font-weight: 600;
+  font-size: 15px;
+  color: #1E293B;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.header-actions .el-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .search-form {
