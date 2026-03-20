@@ -22,8 +22,9 @@ func (h *CustomerHandler) GetCustomers(c *gin.Context) {
 	skip, _ := strconv.Atoi(c.DefaultQuery("skip", "0"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "100"))
 	customerType := c.Query("type")
+	keyword := c.Query("keyword")
 
-	customers, err := h.customerService.GetCustomers(skip, limit, customerType)
+	customers, err := h.customerService.GetCustomers(skip, limit, customerType, keyword)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

@@ -10,8 +10,8 @@
         </div>
       </template>
       <el-form :inline="true" :model="searchForm">
-        <el-form-item label="合同标题">
-          <el-input v-model="searchForm.title" placeholder="请输入合同标题" clearable />
+        <el-form-item label="关键词">
+          <el-input v-model="searchForm.keyword" placeholder="请输入合同编号或合同标题" clearable />
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="searchForm.status" placeholder="请选择状态" clearable>
@@ -187,7 +187,7 @@ const customers = ref([])
 const contractTypes = ref([])
 
 const searchForm = reactive({
-  title: '',
+  keyword: '',
   status: ''
 })
 
@@ -305,7 +305,7 @@ const handleSearch = () => {
 }
 
 const handleReset = () => {
-  Object.assign(searchForm, { title: '', status: '' })
+  Object.assign(searchForm, { keyword: '', status: '' })
   handleSearch()
 }
 
@@ -344,8 +344,8 @@ onMounted(async () => {
   if (route.query.status) {
     searchForm.status = route.query.status
   }
-  if (route.query.title) {
-    searchForm.title = route.query.title
+  if (route.query.keyword) {
+    searchForm.keyword = route.query.keyword
   }
   loadData()
   loadCustomers()

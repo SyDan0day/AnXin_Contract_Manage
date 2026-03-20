@@ -4,16 +4,7 @@
       <div class="sidebar">
         <div class="logo-area">
           <div class="logo-icon">
-            <svg viewBox="0 0 32 32" fill="none">
-              <rect width="32" height="32" rx="8" fill="url(#sidebarLogo)"/>
-              <path d="M8 10h16v3H8zM8 15h12v3H8zM8 20h16v3H8z" fill="white" opacity="0.9"/>
-              <defs>
-                <linearGradient id="sidebarLogo" x1="0" y1="0" x2="32" y2="32">
-                  <stop stop-color="#6366F1"/>
-                  <stop offset="1" stop-color="#8B5CF6"/>
-                </linearGradient>
-              </defs>
-            </svg>
+            <img src="/log.png" alt="Logo" style="width: 32px; height: 32px;" />
           </div>
           <span class="logo-text">安信合同</span>
         </div>

@@ -103,21 +103,29 @@ func ParseToken(tokenString string) (*Claims, error) {
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var tokenString string
+
+		// 首先尝试从 Authorization header 获取 token
 		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+		if authHeader != "" {
+			parts := strings.SplitN(authHeader, " ", 2)
+			if len(parts) == 2 && parts[0] == "Bearer" {
+				tokenString = strings.TrimSpace(parts[1])
+			}
+		}
+
+		// 如果 header 中没有 token，尝试从 query 参数获取（用于 iframe 预览等场景）
+		if tokenString == "" {
+			tokenString = c.Query("token")
+		}
+
+		// 如果仍然没有 token，返回错误
+		if tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header or token parameter is required"})
 			c.Abort()
 			return
 		}
 
-		parts := strings.SplitN(authHeader, " ", 2)
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header format"})
-			c.Abort()
-			return
-		}
-
-		tokenString := strings.TrimSpace(parts[1])
 		if len(tokenString) < 10 {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
 			c.Abort()

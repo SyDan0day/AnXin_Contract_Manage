@@ -253,35 +253,55 @@
         <div v-else-if="previewError" class="preview-error">
           <el-icon><Warning /></el-icon>
           <span>{{ previewError }}</span>
-          <el-button type="primary" @click="downloadPreviewFile">下载文件</el-button>
+          <el-button v-if="isAdmin" type="primary" @click="downloadPreviewFile">下载文件</el-button>
         </div>
         
-        <!-- Word 文档或文本文件内容预览 - 表格形式 -->
-        <div v-else-if="previewData && previewData.content" class="content-preview">
-          <!-- 合同关键信息表格 -->
+        <!-- Word 文档内容预览 - 仅显示关键信息表格 -->
+        <div v-else-if="previewData && previewData.fields && previewData.fields.length > 0" class="content-preview">
+          <!-- 普通字段表格 -->
           <el-table 
-            v-if="previewData.fields && previewData.fields.length > 0"
-            :data="previewData.fields" 
+            :data="previewData.fields.filter(f => !f.isTable)" 
             border 
             style="width: 100%; margin-bottom: 20px;"
             :header-cell-style="{background: '#f5f7fa', color: '#409eff', fontWeight: 'bold'}"
+            stripe
+            v-if="previewData.fields.filter(f => !f.isTable).length > 0"
           >
             <el-table-column prop="label" label="字段名称" width="180" align="center" />
-            <el-table-column prop="value" label="提取内容" min-width="300" align="left" />
+            <el-table-column label="提取内容" min-width="300">
+              <template #default="{ row }">
+                <div v-if="row.isList" style="white-space: pre-line; line-height: 1.8;">{{ row.value }}</div>
+                <span v-else>{{ row.value }}</span>
+              </template>
+            </el-table-column>
           </el-table>
           
-          <!-- 完整文档内容 -->
-          <div class="content-section">
-            <h4 style="margin: 0 0 10px 0; color: #409eff;">📄 完整文档内容</h4>
-            <div class="document-content">
-              <pre>{{ previewData.content }}</pre>
-            </div>
+          <!-- 服务清单表格 -->
+          <div v-for="field in previewData.fields.filter(f => f.isTable)" :key="field.label" style="margin-bottom: 20px;">
+            <h4 style="margin: 0 0 10px 0; color: #409eff; font-size: 14px;">{{ field.label }}</h4>
+            <el-table 
+              :data="field.tableData" 
+              border 
+              style="width: 100%;"
+              :header-cell-style="{background: '#f5f7fa', color: '#409eff', fontWeight: 'bold'}"
+              stripe
+            >
+              <el-table-column v-for="(header, index) in field.tableHeaders" :key="index" :label="header" :prop="String(index)" align="center" :min-width="header === '备注' ? 150 : 100" />
+            </el-table>
+          </div>
+        </div>
+        
+        <!-- 未提取到关键信息 -->
+        <div v-else-if="previewData && previewData.content && (!previewData.fields || previewData.fields.length === 0)" class="content-preview">
+          <div style="text-align: center; padding: 40px; color: #909399;">
+            <p>未从文档中提取到关键信息</p>
+            <p style="font-size: 12px;">文档可能不是标准合同格式，或字段格式不符合提取规则</p>
           </div>
         </div>
         
         <!-- 其他文件类型使用 iframe 预览 -->
         <iframe 
-          v-else-if="previewUrl && previewUrl.startsWith('http')" 
+          v-else-if="previewUrl" 
           :src="previewUrl" 
           class="preview-iframe"
           frameborder="0"
@@ -297,7 +317,7 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="showPreviewDialog = false">关闭</el-button>
-          <el-button type="primary" @click="downloadPreviewFile">下载文件</el-button>
+          <el-button v-if="isAdmin" type="primary" @click="downloadPreviewFile">下载文件</el-button>
         </div>
       </template>
     </el-dialog>
@@ -405,6 +425,11 @@ watch(() => executionForm.progress, (newVal) => {
 const uploadUrl = computed(() => `/api/contracts/${contractId.value}/documents`)
 const uploadHeaders = computed(() => ({ Authorization: `Bearer ${userStore.token}` }))
 
+// 判断是否是超级管理员
+const isAdmin = computed(() => {
+  return userStore.userInfo?.role === 'admin'
+})
+
 const API_BASE = '/api'
 const uploadData = computed(() => ({ contract_id: contractId.value }))
 
@@ -503,13 +528,11 @@ const formatDateTime = (dateStr) => {
   const year = date.getFullYear()
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
-  const hours = date.getHours()
+  const hours = String(date.getHours()).padStart(2, '0')
   const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
   
-  const ampm = hours < 12 ? '上午' : '下午'
-  const hour12 = hours % 12 || 12
-  
-  return `${year}-${month}-${day} ${ampm}${hour12}:${minutes}`
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 }
 
 const formatDate = (dateStr) => {
@@ -661,20 +684,18 @@ const extractContractFields = (text) => {
   
   // 定义所有要提取的字段及其正则表达式
   const patterns = [
-    { label: '合同编号', pattern: /合同编号[：:]\s*([A-Z0-9\-]+)/ },
-    { label: '合同名称', pattern: /合同名称[：:]\s*([^\n]{2,60})/ },
-    { label: '甲方（客户）', pattern: /甲方[（(]?客户[）)]?[：:]\s*([^\n]{2,60})/ },
-    { label: '乙方', pattern: /乙方[：:]\s*([^\n]{2,60})/ },
-    { label: '合同金额', pattern: /合同金额[：:]\s*([\d,]+\.?\d*)\s*(?:元|万)?/ },
-    { label: '签订日期', pattern: /签订日期[：:]\s*(\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[日]?)/ },
-    { label: '开始日期', pattern: /开始日期[：:]\s*(\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[日]?)/ },
-    { label: '结束日期', pattern: /结束日期[：:]\s*(\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[日]?)/ },
-    { label: '合同类型', pattern: /合同类型[：:]\s*([^\n]{2,30})/ },
-    { label: '联系人', pattern: /联系人[：:]\s*([^\n]{2,20})/ },
-    { label: '联系电话', pattern: /(?:联系电话|电话)[：:]\s*([\d\-]{7,20})/ },
-    { label: '地址', pattern: /(?:地址)[：:]\s*([^\n]{5,100})/ },
-    { label: '开户银行', pattern: /开户银行[：:]\s*([^\n]{2,50})/ },
-    { label: '银行账号', pattern: /(?:银行账号|账号)[：:]\s*([\d]{10,30})/ },
+    { label: '合同编号', pattern: /合同编号[：:\s]+([\w\-]+?)(?=委托方|甲方|服务方|乙方|签订|依据|$)/ },
+    { label: '委托方（甲方）', pattern: /委托方（甲方）[：:\s]+(.+?)(?=服务方（乙方）|乙方|$)/ },
+    { label: '服务方（乙方）', pattern: /服务方（乙方）[：:\s]+(.+?)(?=签\s*订|签订|合同有效期|$)/ },
+    { label: '签订地点', pattern: /签\s*订\s*地\s*点[：:\s]+(.+?)(?=签\s*订|签订|合同有效期|$)/ },
+    { label: '签订日期', pattern: /签\s*订\s*日\s*期[：:\s]+(\d{4}[-/年]\d{1,2}[-/月]\d{1,2}[日]?(?:\s*\d{2}:\d{2}:\d{2})?)/ },
+    { label: '合同有效期', pattern: /合同有效期[：:\s]+(.+?)(?=依据|甲乙双方|技术服务的内容|$)/ },
+    { label: '甲方配合人员', pattern: /甲方配合人员[：:\s]*[（(]?([^）)\s]+)[）)]?/ },
+    { label: '甲方配合联系方式', pattern: /联系方式[：:\s]*[（(]?([\d\-]+)[）)]?/ },
+    { label: '乙方服务期', pattern: /乙方服务期[：:\s]+(.+?)(?=如甲方|系统整改|服务清单|$)/ },
+    { label: '合同总价', pattern: /合同总价.*?人民币[：:\s]*([¥￥][\d,]+\.?\d*)/ },
+    { label: '甲方项目联系人', pattern: /项目联系人[：:\s]+(.+?)(?=项目联系人|电\s*话|$)/ },
+    { label: '甲方联系电话', pattern: /电\s*话[：:\s]+([\d\-]{7,20})/ },
   ]
   
   // 提取每个字段
@@ -686,6 +707,95 @@ const extractContractFields = (text) => {
         value: match[1].trim(),
         found: true
       })
+    }
+  }
+  
+  // 特殊处理：服务清单（支持复杂表格格式）
+  const fixedHeaders = ['网络安全保护对象名称', '服务内容', '安全等级', '单价', '合计', '备注']
+  
+  // 查找"服务清单"标题
+  let serviceSection = null
+  
+  // 尝试1：查找"服务清单和价格服务清单"
+  const serviceTitleMatch1 = text.match(/服务清单和价格服务清单[：:\s]*([\s\S]*?)(?=\s*本合同总价|\s*合同总价|$)/)
+  if (serviceTitleMatch1 && serviceTitleMatch1[1]) {
+    serviceSection = serviceTitleMatch1[1]
+  }
+  
+  // 尝试2：直接查找"服务清单"
+  if (!serviceSection) {
+    const serviceTitleMatch2 = text.match(/(?:^|\n)\s*服务清单[：:\s]*([\s\S]*?)(?=\n\s*本合同总价|\n\s*合同总价|\n\s*第[六七八九十]条|\n\s*$|$)/)
+    if (serviceTitleMatch2 && serviceTitleMatch2[1]) {
+      serviceSection = serviceTitleMatch2[1]
+    }
+  }
+  
+  if (serviceSection) {
+    // 检查是否包含表头
+    if (serviceSection.includes('网络安全保护对象名称') || serviceSection.includes('服务内容')) {
+      // 提取表头后的所有行
+      const headerPattern = /(?:网络安全保护对象名称|对象名称)[\s\S]*?(?:服务内容|安全等级|单价|合计|备注)/
+      const headerMatch = serviceSection.match(headerPattern)
+      
+      if (headerMatch) {
+        const afterHeader = serviceSection.substring(headerMatch.index + headerMatch[0].length)
+        
+        // 定义所有可能的服务类型
+        const serviceTypes = [
+          '等级测评', '密评', '密码应用方案咨询', '密码应用方案评审',
+          '风险评估', '安全评估', '差距分析', '软件测试', '源码审计',
+          '上线测试', '安全加固', '渗透测试', '漏洞扫描', '培训'
+        ]
+        
+        const serviceTable = []
+        
+        // 提取每个服务类型的数据
+        for (const serviceType of serviceTypes) {
+          // 查找服务类型的位置
+          const servicePattern = new RegExp(`${serviceType}[\\s\\S]*?(?=(?:等级测评|密评|密码应用方案咨询|密码应用方案评审|风险评估|安全评估|差距分析|软件测试|源码审计|上线测试|安全加固|渗透测试|漏洞扫描|培训)\\b|本合同总价|合同总价|$)`)
+          const serviceMatch = afterHeader.match(servicePattern)
+          
+          if (serviceMatch) {
+            const serviceContent = serviceMatch[0]
+            
+            // 提取安全等级
+            const levelMatch = serviceContent.match(/第[一二三四]级/)
+            const level = levelMatch ? levelMatch[0] : '-'
+            
+            // 提取单价
+            const priceMatch = serviceContent.match(/¥([\d,]+\.?\d*)/)
+            const price = priceMatch ? '¥' + priceMatch[1] : '¥'
+            
+            // 提取合计
+            const totalMatch = serviceContent.match(/¥([\d,]+\.?\d*)/g)
+            const total = totalMatch && totalMatch.length > 1 ? totalMatch[1] : price
+            
+            // 提取备注
+            const remarkMatch = serviceContent.match(/(?:初测|复测|备案地|主管部门)[：:]?([^\n]*)/)
+            const remark = remarkMatch ? remarkMatch[0] : '-'
+            
+            serviceTable.push([
+              '-',  // 网络安全保护对象名称
+              serviceType,
+              level,
+              price,
+              total,
+              remark
+            ])
+          }
+        }
+        
+        if (serviceTable.length > 0) {
+          fields.push({
+            label: '服务清单',
+            value: '',
+            found: true,
+            isTable: true,
+            tableData: serviceTable,
+            tableHeaders: fixedHeaders
+          })
+        }
+      }
     }
   }
   
@@ -734,12 +844,22 @@ const handlePreview = async (row) => {
       previewUrl.value = `/api/documents/${row.id}/preview?token=${token}`
       previewData.value = null
       showPreviewDialog.value = true
+    } else if (fileExt === 'doc') {
+      // .doc 是旧版二进制格式，不支持在线预览
+      previewError.value = '旧版Word文档(.doc)不支持在线预览，请下载查看。建议使用.docx格式。'
+      showPreviewDialog.value = true
     } else {
       ElMessage.warning(`不支持预览此文件类型 (${fileExt})，请下载查看`)
     }
   } catch (error) {
     console.error('预览错误:', error)
-    previewError.value = '预览失败: ' + (error.message || '未知错误')
+    // 检查是否是文件不存在的错误
+    if (error.response?.data?.code === 'FILE_NOT_FOUND' || error.response?.data?.error?.includes('合同文件不存在')) {
+      previewError.value = '合同文件不存在，请联系管理员上传'
+    } else {
+      previewError.value = '预览失败: ' + (error.response?.data?.error || error.message || '未知错误')
+    }
+    showPreviewDialog.value = true
   } finally {
     previewLoading.value = false
   }

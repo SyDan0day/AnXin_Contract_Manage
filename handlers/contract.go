@@ -35,8 +35,9 @@ func (h *ContractHandler) GetContracts(c *gin.Context) {
 	customerID, _ := strconv.ParseUint(c.Query("customer_id"), 10, 32)
 	contractTypeID, _ := strconv.ParseUint(c.Query("contract_type_id"), 10, 32)
 	status := c.Query("status")
+	keyword := c.Query("keyword")
 
-	contracts, err := h.contractService.GetContracts(skip, limit, uint(customerID), uint(contractTypeID), status)
+	contracts, err := h.contractService.GetContracts(skip, limit, uint(customerID), uint(contractTypeID), status, keyword)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -269,7 +270,7 @@ func (h *ContractHandler) PreviewDocument(c *gin.Context) {
 
 	// 检查文件是否存在
 	if _, err := os.Stat(absFilePath); os.IsNotExist(err) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "File not found: " + absFilePath})
+		c.JSON(http.StatusNotFound, gin.H{"error": "合同文件不存在，请联系管理员上传", "code": "FILE_NOT_FOUND"})
 		return
 	}
 
@@ -298,8 +299,10 @@ func (h *ContractHandler) PreviewDocument(c *gin.Context) {
 
 	switch fileExt {
 	case ".pdf":
-		// PDF 文件直接返回
+		// PDF 文件直接返回，允许在iframe中显示
 		c.Header("Content-Type", "application/pdf")
+		c.Header("X-Frame-Options", "SAMEORIGIN")
+		c.Header("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", document.Name))
 		c.File(absFilePath)
 	case ".doc":
 		// Word 文档返回文件内容

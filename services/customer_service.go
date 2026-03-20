@@ -29,11 +29,14 @@ func (s *CustomerService) GetCustomerByCode(code string) (*models.Customer, erro
 	return &customer, nil
 }
 
-func (s *CustomerService) GetCustomers(skip, limit int, customerType string) ([]models.Customer, error) {
+func (s *CustomerService) GetCustomers(skip, limit int, customerType string, keyword string) ([]models.Customer, error) {
 	var customers []models.Customer
 	query := models.DB
 	if customerType != "" {
 		query = query.Where("type = ?", customerType)
+	}
+	if keyword != "" {
+		query = query.Where("code LIKE ? OR name LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
 	}
 	if err := query.Offset(skip).Limit(limit).Find(&customers).Error; err != nil {
 		return nil, err

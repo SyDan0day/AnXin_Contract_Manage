@@ -3,17 +3,7 @@
     <div class="register-left">
       <div class="brand-section">
         <div class="brand-logo">
-          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="48" height="48" rx="12" fill="url(#regLogoGrad)"/>
-            <path d="M14 16h20v4H14zM14 24h16v4H14zM14 32h20v4H14z" fill="white" opacity="0.9"/>
-            <circle cx="36" cy="36" r="8" fill="white" opacity="0.2"/>
-            <defs>
-              <linearGradient id="regLogoGrad" x1="0" y1="0" x2="48" y2="48">
-                <stop stop-color="#6366F1"/>
-                <stop offset="1" stop-color="#8B5CF6"/>
-              </linearGradient>
-            </defs>
-          </svg>
+          <img src="/log.png" alt="Logo" style="width: 48px; height: 48px;" />
         </div>
         <h1 class="brand-title">安信合同</h1>
         <p class="brand-subtitle">智能合同管理解决方案</p>

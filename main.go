@@ -18,13 +18,13 @@ var apiDocs = `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>API 调试 - 安信合同管理系统</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #f5f7fa;
             min-height: 100vh;
             color: #1E293B;
         }
@@ -341,9 +341,9 @@ var apiDocs = `
                 </div>
                 
                 <div class="tabs">
-                    <button class="tab active" onclick="switchTab('params')">Params</button>
-                    <button class="tab" onclick="switchTab('headers')">Headers</button>
-                    <button class="tab" onclick="switchTab('body')">Body</button>
+                    <button class="tab active" onclick="switchTab('params', this)">Params</button>
+                    <button class="tab" onclick="switchTab('headers', this)">Headers</button>
+                    <button class="tab" onclick="switchTab('body', this)">Body</button>
                 </div>
                 
                 <div class="tab-content active" id="tab-params">
@@ -407,15 +407,18 @@ var apiDocs = `
                 document.querySelectorAll('.api-item').forEach(i => i.classList.remove('active'));
                 this.classList.add('active');
                 
-                if (body) switchTab('body');
-                else switchTab('params');
+                if (body) {
+                    switchTab('body', document.querySelector('.tab:nth-child(3)'));
+                } else {
+                    switchTab('params', document.querySelector('.tab:nth-child(1)'));
+                }
             });
         });
         
-        function switchTab(tab) {
+        function switchTab(tab, el) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            event.target.classList.add('active');
+            if (el) el.classList.add('active');
             document.getElementById('tab-' + tab).classList.add('active');
         }
         
@@ -501,7 +504,7 @@ var apiDocs = `
                     if (json.access_token) {
                         document.getElementById('token').value = json.access_token;
                     }
-                } catch {
+                } catch (e) {
                     bodyEl.innerHTML = '<pre>' + text + '</pre>';
                 }
             } catch (error) {
@@ -531,11 +534,11 @@ var apiDocs = `
         }
         
         function formatJson() {
-            const body = document.getElementById('body');
+            var body = document.getElementById('body');
             try {
-                const json = JSON.parse(body.value);
+                var json = JSON.parse(body.value);
                 body.value = JSON.stringify(json, null, 2);
-            } catch {
+            } catch (e) {
                 alert('无效的 JSON 格式');
             }
         }

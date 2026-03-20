@@ -93,7 +93,7 @@ func (s *ContractService) GetContractByNo(contractNo string) (*models.Contract, 
 	return &contract, nil
 }
 
-func (s *ContractService) GetContracts(skip, limit int, customerID, contractTypeID uint, status string) ([]models.Contract, error) {
+func (s *ContractService) GetContracts(skip, limit int, customerID, contractTypeID uint, status string, keyword string) ([]models.Contract, error) {
 	var contracts []models.Contract
 	query := models.DB.Preload("Customer").Preload("Creator").Preload("ContractType")
 
@@ -105,6 +105,9 @@ func (s *ContractService) GetContracts(skip, limit int, customerID, contractType
 	}
 	if status != "" {
 		query = query.Where("status = ?", status)
+	}
+	if keyword != "" {
+		query = query.Where("contract_no LIKE ? OR title LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
 	}
 
 	if err := query.Order("created_at DESC").Offset(skip).Limit(limit).Find(&contracts).Error; err != nil {

@@ -5,8 +5,8 @@
         <el-tab-pane label="客户管理" name="customers">
           <div class="toolbar">
             <el-form :inline="true" :model="searchForm">
-              <el-form-item label="客户名称">
-                <el-input v-model="searchForm.name" placeholder="请输入客户名称" clearable />
+              <el-form-item label="关键词">
+                <el-input v-model="searchForm.keyword" placeholder="请输入客户编码或客户名称" clearable />
               </el-form-item>
               <el-form-item label="类型">
                 <el-select v-model="searchForm.type" placeholder="请选择类型" clearable>
@@ -176,7 +176,7 @@ const tableData = ref([])
 const contractTypes = ref([])
 
 const searchForm = reactive({
-  name: '',
+  keyword: '',
   type: ''
 })
 
@@ -267,7 +267,7 @@ const handleSearch = () => {
 }
 
 const handleReset = () => {
-  Object.assign(searchForm, { name: '', type: '' })
+  Object.assign(searchForm, { keyword: '', type: '' })
   handleSearch()
 }
 
