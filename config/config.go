@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -50,11 +51,11 @@ func LoadConfig() error {
 	viper.SetDefault("UPLOAD_DIR", "uploads")
 
 	viper.SetDefault("ADMIN_USERNAME", "admin")
-	viper.SetDefault("ADMIN_PASSWORD", "admin123")
+	viper.SetDefault("ADMIN_PASSWORD", "Admin@123456")
 	viper.SetDefault("ADMIN_EMAIL", "admin@example.com")
 
 	viper.SetDefault("AUDIT_ADMIN_USERNAME", "auditadmin")
-	viper.SetDefault("AUDIT_ADMIN_PASSWORD", "audit123")
+	viper.SetDefault("AUDIT_ADMIN_PASSWORD", "Auditadmin@123456")
 	viper.SetDefault("AUDIT_ADMIN_EMAIL", "audit@example.com")
 
 	if err := viper.ReadInConfig(); err != nil {
@@ -84,6 +85,10 @@ func validateConfig() error {
 	}
 
 	if AppConfig.SecretKey == "your-secret-key-change-in-production" {
+		// 在生产环境中禁止使用默认密钥
+		if os.Getenv("GO_ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
+			return fmt.Errorf("SECRET_KEY cannot be the default value in production environment")
+		}
 		fmt.Println("WARNING: Using default SECRET_KEY. Please change it in production!")
 	}
 
@@ -111,7 +116,19 @@ func validateConfig() error {
 	AppConfig.AdminUsername = strings.TrimSpace(AppConfig.AdminUsername)
 
 	if AppConfig.AdminPassword == "admin123" {
+		// 在生产环境中禁止使用默认密码
+		if os.Getenv("GO_ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
+			return fmt.Errorf("ADMIN_PASSWORD cannot be the default value in production environment")
+		}
 		fmt.Println("WARNING: Using default admin password. Please change it in production!")
+	}
+
+	if AppConfig.AuditAdminPassword == "audit123" {
+		// 在生产环境中禁止使用默认密码
+		if os.Getenv("GO_ENV") == "production" || os.Getenv("GIN_MODE") == "release" {
+			return fmt.Errorf("AUDIT_ADMIN_PASSWORD cannot be the default value in production environment")
+		}
+		fmt.Println("WARNING: Using default audit admin password. Please change it in production!")
 	}
 
 	return nil

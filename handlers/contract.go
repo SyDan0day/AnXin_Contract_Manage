@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"archive/zip"
+	"bytes"
 	"contract-manage/config"
 	"contract-manage/middleware"
 	"contract-manage/models"
@@ -30,12 +31,46 @@ func NewContractHandler() *ContractHandler {
 }
 
 func (h *ContractHandler) GetContracts(c *gin.Context) {
-	skip, _ := strconv.Atoi(c.DefaultQuery("skip", "0"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "100"))
-	customerID, _ := strconv.ParseUint(c.Query("customer_id"), 10, 32)
-	contractTypeID, _ := strconv.ParseUint(c.Query("contract_type_id"), 10, 32)
+	skip, err := strconv.Atoi(c.DefaultQuery("skip", "0"))
+	if err != nil || skip < 0 {
+		skip = 0
+	}
+
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "100"))
+	if err != nil || limit < 0 {
+		limit = 100
+	}
+	if limit > 1000 {
+		limit = 1000
+	}
+
+	var customerID uint64
+	if customerStr := c.Query("customer_id"); customerStr != "" {
+		if id, err := strconv.ParseUint(customerStr, 10, 32); err == nil {
+			customerID = id
+		}
+	}
+
+	var contractTypeID uint64
+	if typeStr := c.Query("contract_type_id"); typeStr != "" {
+		if id, err := strconv.ParseUint(typeStr, 10, 32); err == nil {
+			contractTypeID = id
+		}
+	}
+
 	status := c.Query("status")
+	if status != "" && !isValidContractStatus(status) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status value"})
+		return
+	}
+
 	keyword := c.Query("keyword")
+	if len(keyword) > 200 {
+		keyword = keyword[:200]
+	}
+	// Escape LIKE wildcards to prevent LIKE injection
+	keyword = strings.ReplaceAll(keyword, "%", "\\%")
+	keyword = strings.ReplaceAll(keyword, "_", "\\_")
 
 	contracts, err := h.contractService.GetContracts(skip, limit, uint(customerID), uint(contractTypeID), status, keyword)
 	if err != nil {
@@ -44,6 +79,26 @@ func (h *ContractHandler) GetContracts(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, contracts)
+}
+
+func isValidContractStatus(status string) bool {
+	validStatuses := []string{
+		"draft",
+		"pending",
+		"approved",
+		"active",
+		"in_progress",
+		"pending_pay",
+		"completed",
+		"terminated",
+		"archived",
+	}
+	for _, s := range validStatuses {
+		if status == s {
+			return true
+		}
+	}
+	return false
 }
 
 func (h *ContractHandler) GetContractByID(c *gin.Context) {
@@ -211,20 +266,80 @@ func (h *ContractHandler) CreateContractDocument(c *gin.Context) {
 		return
 	}
 
-	filename := file.Filename
+	// 文件类型白名单（移除HTML/HTM以防止XSS）
+	allowedExtensions := map[string]bool{
+		"pdf": true, "doc": true, "docx": true, "xls": true, "xlsx": true,
+		"jpg": true, "jpeg": true, "png": true, "gif": true, "bmp": true, "webp": true,
+		"txt": true,
+	}
+
+	// 获取文件扩展名（转为小写）
+	filename := filepath.Base(file.Filename)
+	ext := strings.ToLower(filepath.Ext(filename))
+	if ext != "" {
+		ext = ext[1:] // 移除开头的点
+	}
+
+	// 验证文件类型
+	if !allowedExtensions[ext] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "不支持的文件类型: " + ext})
+		return
+	}
+
+	// 检查双重扩展名，防止恶意文件上传（如 test.php.jpg）
+	if strings.Contains(strings.ToLower(filename), ".php.") ||
+		strings.Contains(strings.ToLower(filename), ".jsp.") ||
+		strings.Contains(strings.ToLower(filename), ".asp.") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "检测到恶意文件名格式"})
+		return
+	}
+
+	// 清理文件名，移除路径信息，防止路径遍历（filename already set above）
+
 	uploadDir := config.AppConfig.UploadDir
 	if uploadDir == "" {
 		uploadDir = "uploads"
 	}
 
-	filePath := fmt.Sprintf("%s/%d/%s", uploadDir, contractID, filename)
+	// 构建安全的文件路径
+	filePath := filepath.Join(uploadDir, strconv.FormatUint(contractID, 10), filename)
 
-	if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
+	// 规范化路径，防止路径遍历
+	cleanFilePath := filepath.Clean(filePath)
+	if strings.Contains(cleanFilePath, "..") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file path"})
+		return
+	}
+
+	// 读取文件内容进行安全检查
+	fileContent, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "无法读取文件"})
+		return
+	}
+	defer fileContent.Close()
+
+	// 读取文件前4KB进行内容检查
+	buffer := make([]byte, 4096)
+	bytesRead, err := fileContent.Read(buffer)
+	if err != nil && err != io.EOF {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "读取文件内容失败"})
+		return
+	}
+	fileContent.Seek(0, io.SeekStart) // 重置读取位置
+
+	// 检查文件内容中是否包含恶意代码
+	if containsMaliciousContent(buffer[:bytesRead], ext) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "文件内容包含恶意代码"})
+		return
+	}
+
+	if err := os.MkdirAll(filepath.Dir(cleanFilePath), 0755); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建目录失败"})
 		return
 	}
 
-	if err := c.SaveUploadedFile(file, filePath); err != nil {
+	if err := c.SaveUploadedFile(file, cleanFilePath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "保存文件失败"})
 		return
 	}
@@ -232,9 +347,9 @@ func (h *ContractHandler) CreateContractDocument(c *gin.Context) {
 	input := services.DocumentCreateInput{
 		ContractID: uint(contractID),
 		Name:       filename,
-		FilePath:   "/" + filePath,
+		FilePath:   "/" + cleanFilePath,
 		FileSize:   int(file.Size),
-		FileType:   filepath.Ext(filename)[1:],
+		FileType:   ext,
 	}
 
 	userID, exists := middleware.GetCurrentUserID(c)
@@ -265,8 +380,15 @@ func (h *ContractHandler) PreviewDocument(c *gin.Context) {
 		return
 	}
 
+	// 清理文件路径，防止路径遍历
+	cleanPath := filepath.Clean(document.FilePath)
+	if strings.Contains(cleanPath, "..") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file path"})
+		return
+	}
+
 	// 构建绝对文件路径
-	absFilePath := filepath.Join(".", document.FilePath)
+	absFilePath := filepath.Join(".", cleanPath)
 
 	// 检查文件是否存在
 	if _, err := os.Stat(absFilePath); os.IsNotExist(err) {
@@ -794,4 +916,45 @@ func (h *ContractHandler) RejectStatusChangeRequest(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, result)
+}
+
+// containsMaliciousContent 检查文件内容是否包含恶意代码
+func containsMaliciousContent(content []byte, fileExt string) bool {
+	if len(content) == 0 {
+		return false
+	}
+
+	// 转换为小写进行检查
+	contentLower := bytes.ToLower(content)
+
+	// 检查PHP标签（对所有文件类型）
+	if bytes.Contains(contentLower, []byte("<?php")) || bytes.Contains(contentLower, []byte("<?=")) {
+		return true
+	}
+
+	// 检查JavaScript标签（对图片文件类型）
+	if fileExt == "jpg" || fileExt == "jpeg" || fileExt == "png" || fileExt == "gif" || fileExt == "bmp" || fileExt == "webp" {
+		if bytes.Contains(contentLower, []byte("<script")) || bytes.Contains(contentLower, []byte("javascript:")) {
+			return true
+		}
+	}
+
+	// 检查常见的WebShell关键字
+	webshellKeywords := [][]byte{
+		[]byte("eval("),
+		[]byte("system("),
+		[]byte("exec("),
+		[]byte("shell_exec("),
+		[]byte("passthru("),
+		[]byte("base64_decode("),
+		[]byte("assert("),
+	}
+
+	for _, keyword := range webshellKeywords {
+		if bytes.Contains(contentLower, keyword) {
+			return true
+		}
+	}
+
+	return false
 }

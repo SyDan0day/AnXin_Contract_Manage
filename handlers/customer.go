@@ -4,6 +4,7 @@ import (
 	"contract-manage/services"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -19,10 +20,27 @@ func NewCustomerHandler() *CustomerHandler {
 }
 
 func (h *CustomerHandler) GetCustomers(c *gin.Context) {
-	skip, _ := strconv.Atoi(c.DefaultQuery("skip", "0"))
-	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "100"))
+	skip, err := strconv.Atoi(c.DefaultQuery("skip", "0"))
+	if err != nil || skip < 0 {
+		skip = 0
+	}
+
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", "100"))
+	if err != nil || limit < 0 {
+		limit = 100
+	}
+	if limit > 1000 {
+		limit = 1000
+	}
+
 	customerType := c.Query("type")
 	keyword := c.Query("keyword")
+	if len(keyword) > 200 {
+		keyword = keyword[:200]
+	}
+	// Escape LIKE wildcards
+	keyword = strings.ReplaceAll(keyword, "%", "\\%")
+	keyword = strings.ReplaceAll(keyword, "_", "\\_")
 
 	customers, err := h.customerService.GetCustomers(skip, limit, customerType, keyword)
 	if err != nil {

@@ -1,7 +1,10 @@
 package middleware
 
 import (
+	"encoding/json"
+	"html"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -105,7 +108,16 @@ func SecureHeadersMiddleware() gin.HandlerFunc {
 		c.Header("X-Frame-Options", "DENY")
 		c.Header("X-XSS-Protection", "1; mode=block")
 		c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-		c.Header("Content-Security-Policy", "default-src 'self'")
+
+		// 为API调试页面设置更宽松的CSP策略
+		if c.Request.URL.Path == "/" {
+			// 允许内联样式和脚本，用于API调试页面
+			c.Header("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'")
+		} else {
+			// 其他页面使用严格策略
+			c.Header("Content-Security-Policy", "default-src 'self'")
+		}
+
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
 		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
 		c.Next()
@@ -159,5 +171,108 @@ func RequestSizeLimitMiddleware(maxSize int64) gin.HandlerFunc {
 			return
 		}
 		c.Next()
+	}
+}
+
+// XssSanitize 对字符串进行HTML转义，防止XSS攻击
+func XssSanitize(s string) string {
+	return html.EscapeString(s)
+}
+
+// SanitizeMap 递归清理map中的所有字符串值
+func SanitizeMap(data map[string]interface{}) map[string]interface{} {
+	for key, value := range data {
+		switch v := value.(type) {
+		case string:
+			data[key] = XssSanitize(v)
+		case map[string]interface{}:
+			data[key] = SanitizeMap(v)
+		case []interface{}:
+			data[key] = SanitizeSlice(v)
+		}
+	}
+	return data
+}
+
+// SanitizeSlice 递归清理slice中的所有字符串值
+func SanitizeSlice(slice []interface{}) []interface{} {
+	for i, value := range slice {
+		switch v := value.(type) {
+		case string:
+			slice[i] = XssSanitize(v)
+		case map[string]interface{}:
+			slice[i] = SanitizeMap(v)
+		case []interface{}:
+			slice[i] = SanitizeSlice(v)
+		}
+	}
+	return slice
+}
+
+// XssProtectionMiddleware XSS防护中间件，对JSON响应进行清理
+func XssProtectionMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 创建自定义响应写入器来捕获响应体
+		writer := &XssSafeResponseWriter{ResponseWriter: c.Writer, body: &strings.Builder{}}
+		c.Writer = writer
+
+		c.Next()
+
+		// 恢复原始的响应写入器
+		c.Writer = writer.ResponseWriter
+
+		// 检查Content-Type
+		contentType := writer.Header().Get("Content-Type")
+		if strings.Contains(contentType, "application/json") {
+			// 解析JSON，清理字符串值，然后重新序列化
+			var data interface{}
+			bodyBytes := []byte(writer.body.String())
+			if err := json.Unmarshal(bodyBytes, &data); err == nil {
+				cleanedData := sanitizeJSONData(data)
+				if cleanedBytes, err := json.Marshal(cleanedData); err == nil {
+					// 设置正确的内容长度并写入清理后的数据
+					writer.Header().Set("Content-Length", strconv.Itoa(len(cleanedBytes)))
+					writer.ResponseWriter.Write(cleanedBytes)
+					return
+				}
+			}
+		}
+
+		// 对于非JSON响应或JSON清理失败的情况，直接写入原始内容
+		if writer.body.Len() > 0 {
+			writer.Header().Set("Content-Length", strconv.Itoa(writer.body.Len()))
+			writer.ResponseWriter.Write([]byte(writer.body.String()))
+		}
+	}
+}
+
+// XssSafeResponseWriter 自定义响应写入器，用于捕获响应体
+type XssSafeResponseWriter struct {
+	gin.ResponseWriter
+	body *strings.Builder
+}
+
+func (w *XssSafeResponseWriter) Write(b []byte) (int, error) {
+	w.body.Write(b)
+	return len(b), nil
+}
+
+// sanitizeJSONData 递归清理JSON数据中的字符串值
+func sanitizeJSONData(data interface{}) interface{} {
+	switch v := data.(type) {
+	case string:
+		return XssSanitize(v)
+	case map[string]interface{}:
+		for key, value := range v {
+			v[key] = sanitizeJSONData(value)
+		}
+		return v
+	case []interface{}:
+		for i, value := range v {
+			v[i] = sanitizeJSONData(value)
+		}
+		return v
+	default:
+		return data
 	}
 }

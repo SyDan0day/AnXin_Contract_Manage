@@ -76,12 +76,46 @@ func validatePassword(password string) error {
 	if password == "" {
 		return usernameError("密码不能为空")
 	}
-	if len(password) < 6 {
-		return usernameError("密码长度至少6位")
+	if len(password) < 8 {
+		return usernameError("密码长度至少8位")
 	}
 	if len(password) > 50 {
 		return usernameError("密码长度不能超过50位")
 	}
+
+	// 密码复杂度要求：至少包含大写字母、小写字母、数字和特殊字符中的三种
+	var hasUpper, hasLower, hasDigit, hasSpecial bool
+	for _, char := range password {
+		switch {
+		case 'A' <= char && char <= 'Z':
+			hasUpper = true
+		case 'a' <= char && char <= 'z':
+			hasLower = true
+		case '0' <= char && char <= '9':
+			hasDigit = true
+		default:
+			hasSpecial = true
+		}
+	}
+
+	complexityScore := 0
+	if hasUpper {
+		complexityScore++
+	}
+	if hasLower {
+		complexityScore++
+	}
+	if hasDigit {
+		complexityScore++
+	}
+	if hasSpecial {
+		complexityScore++
+	}
+
+	if complexityScore < 3 {
+		return usernameError("密码必须包含大写字母、小写字母、数字和特殊字符中的至少三种")
+	}
+
 	return nil
 }
 

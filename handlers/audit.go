@@ -5,6 +5,7 @@ import (
 	"contract-manage/models"
 	"contract-manage/services"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -26,19 +27,46 @@ func GetAuditService() *services.AuditService {
 }
 
 func (h *AuditHandler) GetAuditLogs(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	if err != nil || pageSize < 1 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
 	username := c.Query("username")
+	if len(username) > 50 {
+		username = username[:50]
+	}
+
 	action := c.Query("action")
+	if len(action) > 50 {
+		action = action[:50]
+	}
+
 	module := c.Query("module")
+	if len(module) > 50 {
+		module = module[:50]
+	}
+
 	startDate := c.Query("start_date")
 	endDate := c.Query("end_date")
 
-	if page < 1 {
-		page = 1
+	// 简单的日期格式验证 (YYYY-MM-DD)
+	dateRegex := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
+	if startDate != "" && !dateRegex.MatchString(startDate) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "start_date格式错误，请使用YYYY-MM-DD格式"})
+		return
 	}
-	if pageSize < 1 || pageSize > 100 {
-		pageSize = 20
+	if endDate != "" && !dateRegex.MatchString(endDate) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "end_date格式错误，请使用YYYY-MM-DD格式"})
+		return
 	}
 
 	logs, total, err := h.auditService.GetAuditLogs(page, pageSize, username, action, module, startDate, endDate)
@@ -101,10 +129,33 @@ func (h *AuditHandler) DeleteAuditLogs(c *gin.Context) {
 
 func (h *AuditHandler) ExportAuditLogs(c *gin.Context) {
 	username := c.Query("username")
+	if len(username) > 50 {
+		username = username[:50]
+	}
+
 	action := c.Query("action")
+	if len(action) > 50 {
+		action = action[:50]
+	}
+
 	module := c.Query("module")
+	if len(module) > 50 {
+		module = module[:50]
+	}
+
 	startDate := c.DefaultQuery("start_date", "")
 	endDate := c.DefaultQuery("end_date", "")
+
+	// 简单的日期格式验证 (YYYY-MM-DD)
+	dateRegex := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}$`)
+	if startDate != "" && !dateRegex.MatchString(startDate) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "start_date格式错误，请使用YYYY-MM-DD格式"})
+		return
+	}
+	if endDate != "" && !dateRegex.MatchString(endDate) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "end_date格式错误，请使用YYYY-MM-DD格式"})
+		return
+	}
 
 	logs, _, err := h.auditService.GetAuditLogs(1, 10000, username, action, module, startDate, endDate)
 	if err != nil {
