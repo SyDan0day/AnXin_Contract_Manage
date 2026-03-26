@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"contract-manage/middleware"
+	"contract-manage/models"
 	"contract-manage/services"
 	"net/http"
 	"regexp"
@@ -160,7 +161,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	if input.Role == "" {
-		input.Role = "user"
+		input.Role = models.RoleUser // 默认普通用户（销售）
 	}
 
 	user, err := h.userService.CreateUser(input)
@@ -332,6 +333,32 @@ func (h *AuthHandler) UpdateUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user)
+}
+
+func (h *AuthHandler) ResetPassword(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("user_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "用户ID格式不正确"})
+		return
+	}
+
+	currentRole, _ := c.Get("role")
+	if currentRole != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "只有管理员可以重置密码"})
+		return
+	}
+
+	newPassword := "1qazXSW@"
+
+	if err := h.userService.ResetPassword(uint(id), newPassword); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "重置密码失败: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":      "密码重置成功",
+		"new_password": newPassword,
+	})
 }
 
 func (h *AuthHandler) DeleteUser(c *gin.Context) {

@@ -15,13 +15,13 @@
         </el-form-item>
         <el-form-item label="角色">
           <el-select v-model="searchForm.role" placeholder="请选择角色" clearable>
-            <el-option label="超级管理员" value="super_admin" />
-            <el-option label="行政" value="admin" />
-            <el-option label="技术总监" value="director" />
-            <el-option label="销售经理" value="sales_manager" />
-            <el-option label="销售" value="sales" />
+            <el-option label="管理员" value="admin" />
+            <el-option label="销售负责人" value="sales_manager" />
+            <el-option label="技术负责人" value="tech_leader" />
+            <el-option label="财务负责人" value="finance_leader" />
+            <el-option label="合同负责人" value="contract_manager" />
+            <el-option label="销售" value="user" />
             <el-option label="审计管理员" value="audit_admin" />
-            <el-option label="普通用户" value="user" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -46,11 +46,14 @@
             <el-tag :type="row.is_active ? 'success' : 'info'">{{ row.is_active ? '启用' : '禁用' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column label="操作" width="240" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
               <el-button type="warning" link @click="handleEdit(row)">
                 <el-icon><Edit /></el-icon> 编辑
+              </el-button>
+              <el-button type="primary" link @click="handleResetPassword(row)">
+                <el-icon><Key /></el-icon> 重置密码
               </el-button>
               <el-button type="danger" link @click="handleDelete(row)">
                 <el-icon><Delete /></el-icon> 删除
@@ -88,13 +91,13 @@
         </el-form-item>
         <el-form-item label="角色" prop="role">
           <el-select v-model="formData.role" placeholder="请选择角色" style="width: 100%">
-            <el-option label="超级管理员" value="super_admin" />
-            <el-option label="行政" value="admin" />
-            <el-option label="技术总监" value="director" />
-            <el-option label="销售经理" value="sales_manager" />
-            <el-option label="销售" value="sales" />
+            <el-option label="管理员" value="admin" />
+            <el-option label="销售负责人" value="sales_manager" />
+            <el-option label="技术负责人" value="tech_leader" />
+            <el-option label="财务负责人" value="finance_leader" />
+            <el-option label="合同负责人" value="contract_manager" />
+            <el-option label="销售" value="user" />
             <el-option label="审计管理员" value="audit_admin" />
-            <el-option label="普通用户" value="user" />
           </el-select>
         </el-form-item>
         <el-form-item label="部门">
@@ -120,8 +123,8 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Edit, Delete } from '@element-plus/icons-vue'
-import { getUserList, updateUser, deleteUser, register } from '@/api/auth'
+import { Plus, Edit, Delete, Key } from '@element-plus/icons-vue'
+import { getUserList, updateUser, deleteUser, resetPassword, register } from '@/api/auth'
 
 const loading = ref(false)
 const dialogVisible = ref(false)
@@ -160,26 +163,26 @@ const formRules = {
 
 const getRoleType = (role) => {
   const typeMap = {
-    super_admin: 'danger',
-    admin: 'warning',
-    director: 'success',
-    sales_manager: 'primary',
-    sales: 'info',
-    audit_admin: 'warning',
-    user: ''
+    admin: 'danger',
+    sales_manager: 'warning',
+    tech_leader: 'success',
+    finance_leader: 'primary',
+    contract_manager: 'info',
+    user: '',
+    audit_admin: 'warning'
   }
   return typeMap[role] || ''
 }
 
 const getRoleText = (role) => {
   const textMap = {
-    super_admin: '超级管理员',
-    admin: '行政',
-    director: '技术总监',
-    sales_manager: '销售经理',
-    sales: '销售',
-    audit_admin: '审计管理员',
-    user: '普通用户'
+    admin: '管理员',
+    sales_manager: '销售负责人',
+    tech_leader: '技术负责人',
+    finance_leader: '财务负责人',
+    contract_manager: '合同负责人',
+    user: '销售',
+    audit_admin: '审计管理员'
   }
   return textMap[role] || role
 }
@@ -219,6 +222,19 @@ const handleDelete = async (row) => {
   await deleteUser(row.id)
   ElMessage.success('删除成功')
   loadData()
+}
+
+const handleResetPassword = async (row) => {
+  await ElMessageBox.confirm(`确定要重置用户 "${row.full_name || row.username}" 的密码吗？`, '重置密码', {
+    confirmButtonText: '确定重置',
+    cancelButtonText: '取消',
+    type: 'warning'
+  })
+  const result = await resetPassword(row.id)
+  ElMessage.success('密码重置成功')
+  ElMessageBox.alert(`新密码为：${result.new_password || '123456'}，请告知用户`, '新密码', {
+    confirmButtonText: '确定'
+  })
 }
 
 const handleSearch = () => {

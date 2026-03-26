@@ -32,12 +32,47 @@ func (s *ApprovalService) GetApprovalRecordByID(id uint) (*models.ApprovalRecord
 	return &record, nil
 }
 
-func (s *ApprovalService) GetApprovalRecords(contractID uint) ([]models.ApprovalRecord, error) {
-	var records []models.ApprovalRecord
-	if err := models.DB.Where("contract_id = ?", contractID).Preload("Approver").Order("created_at DESC").Find(&records).Error; err != nil {
+func (s *ApprovalService) GetApprovalRecords(contractID uint) ([]map[string]interface{}, error) {
+	var approvals []models.WorkflowApproval
+	if err := models.DB.Where("contract_id = ?", contractID).Preload("Approver").Order("level ASC").Find(&approvals).Error; err != nil {
 		return nil, err
 	}
-	return records, nil
+
+	var contract models.Contract
+	if err := models.DB.First(&contract, contractID).Error; err != nil {
+		return nil, err
+	}
+
+	var results []map[string]interface{}
+	roleMap := map[int]string{
+		1: "销售负责人审批",
+		2: "技术负责人审批",
+		3: "财务负责人审批",
+	}
+
+	for _, a := range approvals {
+		recordMap := map[string]interface{}{
+			"id":              a.ID,
+			"contract_id":     a.ContractID,
+			"level":           a.Level,
+			"approver_role":   roleMap[a.Level],
+			"status":          a.Status,
+			"comment":         a.Comment,
+			"approved_at":     a.ApprovedAt,
+			"created_at":      a.CreatedAt,
+			"contract_status": contract.Status,
+		}
+		if a.ApproverID != nil && *a.ApproverID > 0 {
+			recordMap["approver"] = map[string]interface{}{
+				"id":        a.Approver.ID,
+				"full_name": a.Approver.FullName,
+				"username":  a.Approver.Username,
+			}
+		}
+		results = append(results, recordMap)
+	}
+
+	return results, nil
 }
 
 type ApprovalRecordCreateInput struct {
@@ -130,49 +165,66 @@ func (s *ApprovalService) UpdateApprovalRecord(id uint, input ApprovalRecordUpda
 func (s *ApprovalService) GetPendingApprovalsByRole(role string, userID uint) ([]map[string]interface{}, error) {
 	var results []map[string]interface{}
 
-	var contracts []models.Contract
-	query := models.DB.Preload("Customer").Order("created_at DESC")
+	approvalRoles := []string{"sales_manager", "tech_leader", "finance_leader", "admin"}
+	isApprovalRole := false
+	isAdmin := false
+	for _, r := range approvalRoles {
+		if role == r {
+			isApprovalRole = true
+			if role == "admin" {
+				isAdmin = true
+			}
+			break
+		}
+	}
 
-	if role == "manager" {
-		query = query.Where("status = ?", "draft")
-		if err := query.Find(&contracts).Error; err != nil {
-			return nil, err
+	if !isApprovalRole {
+		return results, nil
+	}
+
+	var workflows []models.ApprovalWorkflow
+	if err := models.DB.Where("status = ?", models.WorkflowStatusPending).Find(&workflows).Error; err != nil {
+		return nil, err
+	}
+
+	for _, wf := range workflows {
+		var approval models.WorkflowApproval
+		var queryErr error
+
+		// Admin sees all pending approvals, other roles see only their role's approvals
+		if isAdmin {
+			queryErr = models.DB.Where("workflow_id = ? AND level = ? AND status = ?",
+				wf.ID, wf.CurrentLevel, models.WorkflowStatusPending).First(&approval).Error
+		} else {
+			queryErr = models.DB.Where("workflow_id = ? AND approver_role = ? AND level = ? AND status = ?",
+				wf.ID, role, wf.CurrentLevel, models.WorkflowStatusPending).First(&approval).Error
 		}
-		for _, c := range contracts {
-			results = append(results, map[string]interface{}{
-				"id":               c.ID,
-				"contract_no":      c.ContractNo,
-				"title":            c.Title,
-				"amount":           c.Amount,
-				"status":           c.Status,
-				"created_at":       c.CreatedAt,
-				"customer":         c.Customer,
-				"creator_id":       c.CreatorID,
-				"contract_type_id": c.ContractTypeID,
-				"approval_id":      uint(0),
-			})
+
+		if queryErr != nil {
+			continue
 		}
-	} else if role == "admin" {
-		query = query.Where("status = ?", "pending")
-		if err := query.Find(&contracts).Error; err != nil {
-			return nil, err
+
+		var contract models.Contract
+		if err := models.DB.Preload("Customer").First(&contract, wf.ContractID).Error; err != nil {
+			continue
 		}
-		for _, c := range contracts {
-			var latestApproval models.ApprovalRecord
-			models.DB.Where("contract_id = ?", c.ID).Order("created_at DESC").First(&latestApproval)
-			results = append(results, map[string]interface{}{
-				"id":               c.ID,
-				"contract_no":      c.ContractNo,
-				"title":            c.Title,
-				"amount":           c.Amount,
-				"status":           c.Status,
-				"created_at":       c.CreatedAt,
-				"customer":         c.Customer,
-				"creator_id":       c.CreatorID,
-				"contract_type_id": c.ContractTypeID,
-				"approval_id":      latestApproval.ID,
-			})
-		}
+
+		results = append(results, map[string]interface{}{
+			"id":               contract.ID,
+			"contract_no":      contract.ContractNo,
+			"title":            contract.Title,
+			"amount":           contract.Amount,
+			"status":           contract.Status,
+			"created_at":       contract.CreatedAt,
+			"customer":         contract.Customer,
+			"creator_id":       contract.CreatorID,
+			"contract_type_id": contract.ContractTypeID,
+			"approval_id":      approval.ID,
+			"workflow_id":      wf.ID,
+			"approval_level":   approval.Level,
+			"approver_role":    approval.ApproverRole,
+			"current_level":    wf.CurrentLevel,
+		})
 	}
 
 	return results, nil
@@ -254,37 +306,63 @@ func (s *ApprovalService) UpdateReminderSent(id uint) error {
 	return models.DB.Save(reminder).Error
 }
 
-func (s *ApprovalService) GetExpiringContracts(days int) ([]models.Contract, error) {
+// GetExpiringContractsWithAuth 获取即将到期合同（带权限检查）
+func (s *ApprovalService) GetExpiringContractsWithAuth(days int, userID uint, role string) ([]models.Contract, error) {
 	today := time.Now()
 	expiryDate := today.AddDate(0, 0, days)
 
 	var contracts []models.Contract
-	if err := models.DB.Where("end_date <= ? AND end_date >= ? AND status = ?",
-		expiryDate, today, models.StatusActive).Find(&contracts).Error; err != nil {
+	query := models.DB.Where("end_date <= ? AND end_date >= ? AND status = ?",
+		expiryDate, today, models.StatusActive)
+
+	// 根据角色过滤
+	userRole := models.UserRole(role)
+	if !models.CanViewAllContracts(userRole) {
+		query = query.Where("creator_id = ?", userID)
+	}
+
+	if err := query.Find(&contracts).Error; err != nil {
 		return nil, err
 	}
 	return contracts, nil
 }
 
-type Statistics struct {
-	TotalContracts     int64   `json:"total_contracts"`
-	ActiveContracts    int64   `json:"active_contracts"`
-	PendingContracts   int64   `json:"pending_contracts"`
-	CompletedContracts int64   `json:"completed_contracts"`
-	DraftContracts     int64   `json:"draft_contracts"`
-	TerminatedContracts int64  `json:"terminated_contracts"`
-	TotalAmount        float64 `json:"total_amount"`
-	ThisMonthContracts int64   `json:"this_month_contracts"`
-	ThisMonthAmount    float64 `json:"this_month_amount"`
-	ExpiringSoon       int     `json:"expiring_soon"`
+// GetExpiringContracts 获取即将到期合同（兼容旧接口）
+func (s *ApprovalService) GetExpiringContracts(days int) ([]models.Contract, error) {
+	return s.GetExpiringContractsWithAuth(days, 0, "admin")
 }
 
-func (s *ApprovalService) GetStatistics() (*Statistics, error) {
+type Statistics struct {
+	TotalContracts      int64   `json:"total_contracts"`
+	ActiveContracts     int64   `json:"active_contracts"`
+	PendingContracts    int64   `json:"pending_contracts"`
+	CompletedContracts  int64   `json:"completed_contracts"`
+	DraftContracts      int64   `json:"draft_contracts"`
+	TerminatedContracts int64   `json:"terminated_contracts"`
+	TotalAmount         float64 `json:"total_amount"`
+	ThisMonthContracts  int64   `json:"this_month_contracts"`
+	ThisMonthAmount     float64 `json:"this_month_amount"`
+	ExpiringSoon        int     `json:"expiring_soon"`
+}
+
+// GetStatisticsParams 统计数据参数
+type GetStatisticsParams struct {
+	UserID uint
+	Role   string
+}
+
+// GetStatistics 获取统计数据（支持角色过滤）
+func (s *ApprovalService) GetStatistics(params GetStatisticsParams) (*Statistics, error) {
 	today := time.Now()
 	thisMonthStart := time.Date(today.Year(), today.Month(), 1, 0, 0, 0, 0, time.Local)
 
 	stats := &Statistics{}
 
+	// 根据角色获取条件
+	role := models.UserRole(params.Role)
+	canViewAll := models.CanViewAllContracts(role)
+
+	// 统计总数
 	models.DB.Model(&models.Contract{}).Count(&stats.TotalContracts)
 	models.DB.Model(&models.Contract{}).Where("status = ?", models.StatusActive).Count(&stats.ActiveContracts)
 	models.DB.Model(&models.Contract{}).Where("status = ?", models.StatusPending).Count(&stats.PendingContracts)
@@ -292,21 +370,35 @@ func (s *ApprovalService) GetStatistics() (*Statistics, error) {
 	models.DB.Model(&models.Contract{}).Where("status = ?", models.StatusDraft).Count(&stats.DraftContracts)
 	models.DB.Model(&models.Contract{}).Where("status = ?", models.StatusTerminated).Count(&stats.TerminatedContracts)
 
-	var totalAmount *float64
+	// 统计金额
+	var totalAmount, thisMonthAmount float64
 	models.DB.Model(&models.Contract{}).Where("amount IS NOT NULL").Select("SUM(amount)").Scan(&totalAmount)
-	if totalAmount != nil {
-		stats.TotalAmount = *totalAmount
-	}
-
+	models.DB.Model(&models.Contract{}).Where("created_at >= ? AND amount IS NOT NULL", thisMonthStart).Select("SUM(amount)").Scan(&thisMonthAmount)
+	stats.TotalAmount = totalAmount
+	stats.ThisMonthAmount = thisMonthAmount
 	models.DB.Model(&models.Contract{}).Where("created_at >= ?", thisMonthStart).Count(&stats.ThisMonthContracts)
 
-	var thisMonthAmount *float64
-	models.DB.Model(&models.Contract{}).Where("created_at >= ? AND amount IS NOT NULL", thisMonthStart).Select("SUM(amount)").Scan(&thisMonthAmount)
-	if thisMonthAmount != nil {
-		stats.ThisMonthAmount = *thisMonthAmount
+	// 非管理员角色，需要过滤统计数据
+	if !canViewAll {
+		// 重新统计符合条件的数量
+		models.DB.Model(&models.Contract{}).Where("creator_id = ?", params.UserID).Count(&stats.TotalContracts)
+		models.DB.Model(&models.Contract{}).Where("creator_id = ? AND status = ?", params.UserID, models.StatusActive).Count(&stats.ActiveContracts)
+		models.DB.Model(&models.Contract{}).Where("creator_id = ? AND status = ?", params.UserID, models.StatusPending).Count(&stats.PendingContracts)
+		models.DB.Model(&models.Contract{}).Where("creator_id = ? AND status = ?", params.UserID, models.StatusCompleted).Count(&stats.CompletedContracts)
+		models.DB.Model(&models.Contract{}).Where("creator_id = ? AND status = ?", params.UserID, models.StatusDraft).Count(&stats.DraftContracts)
+		models.DB.Model(&models.Contract{}).Where("creator_id = ? AND status = ?", params.UserID, models.StatusTerminated).Count(&stats.TerminatedContracts)
+
+		// 重新统计金额
+		var userTotalAmount, userThisMonthAmount float64
+		models.DB.Model(&models.Contract{}).Where("creator_id = ? AND amount IS NOT NULL", params.UserID).Select("SUM(amount)").Scan(&userTotalAmount)
+		models.DB.Model(&models.Contract{}).Where("creator_id = ? AND created_at >= ? AND amount IS NOT NULL", params.UserID, thisMonthStart).Select("SUM(amount)").Scan(&userThisMonthAmount)
+		stats.TotalAmount = userTotalAmount
+		stats.ThisMonthAmount = userThisMonthAmount
+
+		models.DB.Model(&models.Contract{}).Where("creator_id = ? AND created_at >= ?", params.UserID, thisMonthStart).Count(&stats.ThisMonthContracts)
 	}
 
-	expiring, _ := s.GetExpiringContracts(30)
+	expiring, _ := s.GetExpiringContractsWithAuth(30, params.UserID, params.Role)
 	stats.ExpiringSoon = len(expiring)
 
 	return stats, nil

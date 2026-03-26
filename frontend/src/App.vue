@@ -321,4 +321,59 @@ body {
   background: rgba(99, 102, 241, 0.2);
   color: #1E293B;
 }
+
+/* 表格自适应样式 */
+.el-table {
+  width: 100% !important;
+}
+
+.el-table__header-wrapper,
+.el-table__body-wrapper {
+  width: 100% !important;
+}
+
+/* 操作按钮自适应 */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
+.action-buttons .el-button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.action-buttons .el-button .el-icon {
+  font-size: 12px;
+}
+
+/* 小屏幕优化 */
+@media screen and (max-width: 1200px) {
+  .action-buttons .el-button span {
+    display: none;
+  }
+  
+  .action-buttons .el-button::before {
+    content: '';
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .el-card {
+    border-radius: 12px;
+  }
+  
+  .el-form--inline .el-form-item {
+    display: block;
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+  
+  .el-table {
+    font-size: 12px;
+  }
+}
 </style>

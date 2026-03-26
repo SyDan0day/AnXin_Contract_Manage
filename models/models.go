@@ -15,21 +15,51 @@ import (
 type UserRole string
 
 const (
-	RoleAdmin      UserRole = "admin"
-	RoleManager    UserRole = "manager"
-	RoleUser       UserRole = "user"
-	RoleAuditAdmin UserRole = "audit_admin"
+	RoleAdmin           UserRole = "admin"            // 超级管理员
+	RoleSalesManager    UserRole = "sales_manager"    // 销售负责人 - 一级审批
+	RoleTechLeader      UserRole = "tech_leader"      // 技术负责人 - 二级审批
+	RoleFinanceLeader   UserRole = "finance_leader"   // 财务负责人 - 三级审批
+	RoleContractManager UserRole = "contract_manager" // 合同负责人 - 可查看所有合同
+	RoleUser            UserRole = "user"             // 销售 - 普通用户，仅可见自己创建的
+	RoleAuditAdmin      UserRole = "audit_admin"      // 审计管理员
 )
+
+// 角色层级（用于审批流程）
+var RoleLevel = map[UserRole]int{
+	RoleUser:            0, // 普通用户，无审批权限
+	RoleSalesManager:    1, // 一级审批
+	RoleTechLeader:      2, // 二级审批
+	RoleFinanceLeader:   3, // 三级审批
+	RoleContractManager: 0, // 合同负责人，无审批权限但可查看所有
+	RoleAdmin:           0, // 管理员
+	RoleAuditAdmin:      0, // 审计管理员
+}
+
+// GetRoleLevel 获取角色审批层级
+func GetRoleLevel(role UserRole) int {
+	if level, ok := RoleLevel[role]; ok {
+		return level
+	}
+	return 0
+}
+
+// IsManagerRole 判断是否为审批角色
+func IsManagerRole(role UserRole) bool {
+	return role == RoleSalesManager || role == RoleTechLeader || role == RoleFinanceLeader
+}
+
+// CanViewAllContracts 判断是否可以查看所有合同
+func CanViewAllContracts(role UserRole) bool {
+	return role == RoleAdmin || role == RoleContractManager || role == RoleAuditAdmin ||
+		role == RoleSalesManager || role == RoleTechLeader || role == RoleFinanceLeader
+}
 
 type ContractStatus string
 
 const (
 	StatusDraft      ContractStatus = "draft"
 	StatusPending    ContractStatus = "pending"
-	StatusApproved   ContractStatus = "approved"
 	StatusActive     ContractStatus = "active"
-	StatusInProgress ContractStatus = "in_progress"
-	StatusPendingPay ContractStatus = "pending_pay"
 	StatusCompleted  ContractStatus = "completed"
 	StatusTerminated ContractStatus = "terminated"
 	StatusArchived   ContractStatus = "archived"
@@ -38,10 +68,7 @@ const (
 const (
 	StatusDraftText      = "草稿"
 	StatusPendingText    = "待审批"
-	StatusApprovedText   = "已批准"
 	StatusActiveText     = "已生效"
-	StatusInProgressText = "执行中"
-	StatusPendingPayText = "待付款"
 	StatusCompletedText  = "已完成"
 	StatusTerminatedText = "已终止"
 	StatusArchivedText   = "已归档"
@@ -53,14 +80,8 @@ func GetStatusText(status ContractStatus) string {
 		return StatusDraftText
 	case StatusPending:
 		return StatusPendingText
-	case StatusApproved:
-		return StatusApprovedText
 	case StatusActive:
 		return StatusActiveText
-	case StatusInProgress:
-		return StatusInProgressText
-	case StatusPendingPay:
-		return StatusPendingPayText
 	case StatusCompleted:
 		return StatusCompletedText
 	case StatusTerminated:
@@ -76,10 +97,7 @@ func GetStatusOptions() []map[string]string {
 	return []map[string]string{
 		{"value": string(StatusDraft), "label": StatusDraftText},
 		{"value": string(StatusPending), "label": StatusPendingText},
-		{"value": string(StatusApproved), "label": StatusApprovedText},
 		{"value": string(StatusActive), "label": StatusActiveText},
-		{"value": string(StatusInProgress), "label": StatusInProgressText},
-		{"value": string(StatusPendingPay), "label": StatusPendingPayText},
 		{"value": string(StatusCompleted), "label": StatusCompletedText},
 		{"value": string(StatusTerminated), "label": StatusTerminatedText},
 		{"value": string(StatusArchived), "label": StatusArchivedText},
@@ -143,43 +161,28 @@ type ContractType struct {
 }
 
 type Contract struct {
-	ID              uint                `gorm:"primaryKey" json:"id"`
-	ContractNo      string              `gorm:"size:50;uniqueIndex:idx_contracts_contract_no;not null" json:"contract_no"`
-	Title           string              `gorm:"size:200;not null;index" json:"title"`
-	CustomerID      uint                `gorm:"index" json:"customer_id"`
-	ContractTypeID  uint                `gorm:"index" json:"contract_type_id"`
-	Amount          float64             `json:"amount"`
-	Currency        string              `gorm:"size:10;default:CNY" json:"currency"`
-	Status          ContractStatus      `gorm:"size:20;default:draft" json:"status"`
-	SignDate        *time.Time          `json:"sign_date"`
-	StartDate       *time.Time          `json:"start_date"`
-	EndDate         *time.Time          `json:"end_date"`
-	PaymentTerms    string              `gorm:"type:text" json:"payment_terms"`
-	Content         string              `gorm:"type:text" json:"content"`
-	Notes           string              `gorm:"type:text" json:"notes"`
-	CreatorID       uint                `gorm:"index" json:"creator_id"`
-	CreatedAt       time.Time           `json:"created_at"`
-	UpdatedAt       *time.Time          `json:"updated_at"`
-	Customer        *Customer           `gorm:"foreignKey:CustomerID" json:"customer,omitempty"`
-	Creator         *User               `gorm:"foreignKey:CreatorID" json:"creator,omitempty"`
-	ContractType    *ContractType       `gorm:"foreignKey:ContractTypeID" json:"contract_type,omitempty"`
-	Executions      []ContractExecution `gorm:"foreignKey:ContractID" json:"executions,omitempty"`
-	Documents       []Document          `gorm:"foreignKey:ContractID" json:"documents,omitempty"`
-	ApprovalRecords []ApprovalRecord    `gorm:"foreignKey:ContractID" json:"approval_records,omitempty"`
-}
-
-type ContractExecution struct {
-	ID            uint       `gorm:"primaryKey" json:"id"`
-	ContractID    uint       `gorm:"index" json:"contract_id"`
-	Stage         string     `gorm:"size:100" json:"stage"`
-	StageDate     *time.Time `json:"stage_date"`
-	Progress      float64    `gorm:"default:0" json:"progress"`
-	PaymentAmount float64    `json:"payment_amount"`
-	PaymentDate   *time.Time `json:"payment_date"`
-	Description   string     `gorm:"type:text" json:"description"`
-	OperatorID    uint       `gorm:"index" json:"operator_id"`
-	CreatedAt     time.Time  `json:"created_at"`
-	Contract      *Contract  `gorm:"foreignKey:ContractID" json:"contract,omitempty"`
+	ID              uint             `gorm:"primaryKey" json:"id"`
+	ContractNo      string           `gorm:"size:50;uniqueIndex:idx_contracts_contract_no;not null" json:"contract_no"`
+	Title           string           `gorm:"size:200;not null;index" json:"title"`
+	CustomerID      uint             `gorm:"index" json:"customer_id"`
+	ContractTypeID  uint             `gorm:"index" json:"contract_type_id"`
+	Amount          float64          `json:"amount"`
+	Currency        string           `gorm:"size:10;default:CNY" json:"currency"`
+	Status          ContractStatus   `gorm:"size:20;default:draft;index" json:"status"`
+	SignDate        *time.Time       `gorm:"index" json:"sign_date"`
+	StartDate       *time.Time       `gorm:"index" json:"start_date"`
+	EndDate         *time.Time       `gorm:"index" json:"end_date"`
+	PaymentTerms    string           `gorm:"type:text" json:"payment_terms"`
+	Content         string           `gorm:"type:text" json:"content"`
+	Notes           string           `gorm:"type:text" json:"notes"`
+	CreatorID       uint             `gorm:"index" json:"creator_id"`
+	CreatedAt       time.Time        `json:"created_at"`
+	UpdatedAt       *time.Time       `json:"updated_at"`
+	Customer        *Customer        `gorm:"foreignKey:CustomerID" json:"customer,omitempty"`
+	Creator         *User            `gorm:"foreignKey:CreatorID" json:"creator,omitempty"`
+	ContractType    *ContractType    `gorm:"foreignKey:ContractTypeID" json:"contract_type,omitempty"`
+	Documents       []Document       `gorm:"foreignKey:ContractID" json:"documents,omitempty"`
+	ApprovalRecords []ApprovalRecord `gorm:"foreignKey:ContractID" json:"approval_records,omitempty"`
 }
 
 type ApprovalRecord struct {
@@ -266,6 +269,24 @@ type Reminder struct {
 	CreatedAt    time.Time  `json:"created_at"`
 }
 
+type Notification struct {
+	ID         uint      `gorm:"primaryKey" json:"id"`
+	UserID     uint      `gorm:"index" json:"user_id"`
+	Type       string    `gorm:"size:50" json:"type"`
+	Title      string    `gorm:"size:200" json:"title"`
+	Content    string    `gorm:"type:text" json:"content"`
+	ContractID *uint     `gorm:"index" json:"contract_id,omitempty"`
+	IsRead     bool      `gorm:"default:false" json:"is_read"`
+	CreatedAt  time.Time `json:"created_at"`
+	Contract   *Contract `gorm:"foreignKey:ContractID" json:"contract,omitempty"`
+}
+
+const (
+	NotificationTypeRejected     = "rejected"
+	NotificationTypeApproved     = "approved"
+	NotificationTypeStatusChange = "status_change"
+)
+
 type AuditLog struct {
 	ID         uint      `gorm:"primaryKey" json:"id"`
 	UserID     uint      `gorm:"index" json:"user_id"`
@@ -342,13 +363,15 @@ func AutoMigrate() error {
 		&Customer{},
 		&ContractType{},
 		&Contract{},
-		&ContractExecution{},
 		&ApprovalRecord{},
 		&Document{},
 		&ContractLifecycleEvent{},
 		&Reminder{},
 		&StatusChangeRequest{},
 		&AuditLog{},
+		&ApprovalWorkflow{},
+		&WorkflowApproval{},
+		&Notification{},
 	)
 	if err != nil {
 		// 忽略特定的迁移错误，例如尝试删除不存在的外键约束

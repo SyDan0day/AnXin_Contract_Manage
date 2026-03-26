@@ -11,6 +11,42 @@ import (
 	"gorm.io/gorm"
 )
 
+// 定义允许的状态转换
+var allowedStatusTransitions = map[models.ContractStatus]map[models.ContractStatus]bool{
+	models.StatusDraft: {
+		models.StatusPending:    true,
+		models.StatusTerminated: true,
+	},
+	models.StatusPending: {
+		models.StatusActive:     true,
+		models.StatusDraft:      true,
+		models.StatusTerminated: true,
+	},
+	models.StatusActive: {
+		models.StatusCompleted:  true,
+		models.StatusTerminated: true,
+	},
+	models.StatusCompleted: {
+		models.StatusTerminated: true,
+	},
+	models.StatusTerminated: {
+		// 终止状态不能转换到其他状态
+	},
+	models.StatusArchived: {
+		// 已归档状态不能转换到其他状态
+	},
+}
+
+// isValidStatusTransition 检查状态转换是否允许
+func isValidStatusTransition(from, to models.ContractStatus) bool {
+	if allowedTransitions, exists := allowedStatusTransitions[from]; exists {
+		if allowedTransitions[to] {
+			return true
+		}
+	}
+	return false
+}
+
 type ContractService struct{}
 
 func NewContractService() *ContractService {
@@ -77,6 +113,23 @@ func (s *ContractService) generateContractNo() string {
 	return prefix + newNo
 }
 
+// GetContractByIDWithAuth 获取合同详情（带权限检查）
+func (s *ContractService) GetContractByIDWithAuth(id uint, userID uint, role string) (*models.Contract, error) {
+	var contract models.Contract
+	if err := models.DB.Preload("Customer").Preload("Creator").Preload("ContractType").First(&contract, id).Error; err != nil {
+		return nil, err
+	}
+
+	// 检查权限
+	userRole := models.UserRole(role)
+	if !models.CanViewAllContracts(userRole) && contract.CreatorID != userID {
+		return nil, fmt.Errorf("无权限查看此合同")
+	}
+
+	return &contract, nil
+}
+
+// GetContractByID 获取合同详情（兼容旧接口，无权限检查）
 func (s *ContractService) GetContractByID(id uint) (*models.Contract, error) {
 	var contract models.Contract
 	if err := models.DB.Preload("Customer").Preload("Creator").Preload("ContractType").First(&contract, id).Error; err != nil {
@@ -93,27 +146,58 @@ func (s *ContractService) GetContractByNo(contractNo string) (*models.Contract, 
 	return &contract, nil
 }
 
-func (s *ContractService) GetContracts(skip, limit int, customerID, contractTypeID uint, status string, keyword string) ([]models.Contract, error) {
+// GetContractsParams 获取合同列表参数
+type GetContractsParams struct {
+	Skip           int
+	Limit          int
+	CustomerID     uint
+	ContractTypeID uint
+	Status         string
+	Keyword        string
+	UserID         uint   // 当前用户ID
+	Role           string // 当前用户角色
+}
+
+// GetContracts 获取合同列表（根据角色过滤）
+func (s *ContractService) GetContracts(params GetContractsParams) ([]models.Contract, int64, error) {
 	var contracts []models.Contract
-	query := models.DB.Preload("Customer").Preload("Creator").Preload("ContractType")
+	var total int64
 
-	if customerID > 0 {
-		query = query.Where("customer_id = ?", customerID)
-	}
-	if contractTypeID > 0 {
-		query = query.Where("contract_type_id = ?", contractTypeID)
-	}
-	if status != "" {
-		query = query.Where("status = ?", status)
-	}
-	if keyword != "" {
-		query = query.Where("contract_no LIKE ? OR title LIKE ?", "%"+keyword+"%", "%"+keyword+"%")
+	query := models.DB.Model(&models.Contract{})
+
+	// 根据角色过滤数据
+	role := models.UserRole(params.Role)
+	if !models.CanViewAllContracts(role) {
+		// 非管理员角色，只能查看自己创建的合同
+		query = query.Where("creator_id = ?", params.UserID)
 	}
 
-	if err := query.Order("created_at DESC").Offset(skip).Limit(limit).Find(&contracts).Error; err != nil {
-		return nil, err
+	// 构建查询条件
+	if params.CustomerID > 0 {
+		query = query.Where("customer_id = ?", params.CustomerID)
 	}
-	return contracts, nil
+	if params.ContractTypeID > 0 {
+		query = query.Where("contract_type_id = ?", params.ContractTypeID)
+	}
+	if params.Status != "" {
+		query = query.Where("status = ?", params.Status)
+	}
+	if params.Keyword != "" {
+		query = query.Where("contract_no LIKE ? OR title LIKE ?", "%"+params.Keyword+"%", "%"+params.Keyword+"%")
+	}
+
+	// 统计总数
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// 分页查询
+	if err := query.Preload("Customer").Preload("Creator").Preload("ContractType").
+		Order("created_at DESC").Offset(params.Skip).Limit(params.Limit).Find(&contracts).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return contracts, total, nil
 }
 
 func (s *ContractService) CreateContract(input ContractCreateInput, creatorID uint) (*models.Contract, error) {
@@ -230,59 +314,6 @@ func (s *ContractService) DeleteContract(id uint) error {
 	return result.Error
 }
 
-func (s *ContractService) GetContractExecutionByID(id uint) (*models.ContractExecution, error) {
-	var execution models.ContractExecution
-	if err := models.DB.First(&execution, id).Error; err != nil {
-		return nil, err
-	}
-	return &execution, nil
-}
-
-func (s *ContractService) GetContractExecutions(contractID uint) ([]models.ContractExecution, error) {
-	var executions []models.ContractExecution
-	if err := models.DB.Where("contract_id = ?", contractID).Order("created_at DESC").Find(&executions).Error; err != nil {
-		return nil, err
-	}
-	return executions, nil
-}
-
-type ContractExecutionCreateInput struct {
-	ContractID    uint      `json:"contract_id"`
-	Stage         string    `json:"stage"`
-	StageDate     *JSONTime `json:"stage_date"`
-	Progress      float64   `json:"progress"`
-	PaymentAmount float64   `json:"payment_amount"`
-	PaymentDate   *JSONTime `json:"payment_date"`
-	Description   string    `json:"description"`
-}
-
-func (s *ContractService) CreateContractExecution(input ContractExecutionCreateInput, operatorID uint) (*models.ContractExecution, error) {
-	execution := models.ContractExecution{
-		ContractID:    input.ContractID,
-		Stage:         input.Stage,
-		Progress:      input.Progress,
-		PaymentAmount: input.PaymentAmount,
-		Description:   input.Description,
-		OperatorID:    operatorID,
-	}
-
-	if input.StageDate != nil && !input.StageDate.Time.IsZero() {
-		execution.StageDate = &input.StageDate.Time
-	}
-	if input.PaymentDate != nil && !input.PaymentDate.Time.IsZero() {
-		execution.PaymentDate = &input.PaymentDate.Time
-	}
-
-	if err := models.DB.Create(&execution).Error; err != nil {
-		return nil, err
-	}
-	return &execution, nil
-}
-
-func (s *ContractService) DeleteExecution(id uint) error {
-	return models.DB.Delete(&models.ContractExecution{}, id).Error
-}
-
 func (s *ContractService) GetDocumentByID(id uint) (*models.Document, error) {
 	var document models.Document
 	if err := models.DB.First(&document, id).Error; err != nil {
@@ -365,23 +396,39 @@ func (s *ContractService) GetLifecycleEvents(contractID uint) ([]models.Contract
 	return events, nil
 }
 
+// UpdateContractStatus 更新合同状态
 func (s *ContractService) UpdateContractStatus(contractID uint, newStatus string, operatorID uint) (*models.Contract, error) {
 	var contract models.Contract
 	if err := models.DB.First(&contract, contractID).Error; err != nil {
 		return nil, err
 	}
 
-	oldStatus := string(contract.Status)
-	contract.Status = models.ContractStatus(newStatus)
+	newStatusEnum := models.ContractStatus(newStatus)
+	oldStatus := contract.Status
+
+	// 验证状态转换是否允许
+	if !isValidStatusTransition(oldStatus, newStatusEnum) {
+		return nil, fmt.Errorf("不允许的状态转换：%s -> %s", oldStatus, newStatusEnum)
+	}
+
+	contract.Status = newStatusEnum
 
 	if err := models.DB.Save(&contract).Error; err != nil {
 		return nil, err
 	}
 
+	// 如果合同状态变更为终止或归档，结束审批流程
+	if newStatus == "terminated" || newStatus == "archived" {
+		models.DB.Model(&models.ApprovalWorkflow{}).Where("contract_id = ? AND status = ?", contractID, "pending").
+			Update("status", models.WorkflowStatusCancelled)
+		models.DB.Model(&models.WorkflowApproval{}).Where("contract_id = ? AND status = ?", contractID, "pending").
+			Update("status", models.WorkflowStatusCancelled)
+	}
+
 	s.AddLifecycleEvent(contractID, LifecycleEventInput{
 		EventType:   "status_changed",
-		FromStatus:  oldStatus,
-		ToStatus:    newStatus,
+		FromStatus:  string(oldStatus),
+		ToStatus:    string(newStatusEnum),
 		Description: "合同状态变更",
 	}, operatorID)
 
@@ -401,6 +448,12 @@ func (s *ContractService) ArchiveContract(contractID uint, operatorID uint) (*mo
 		return nil, err
 	}
 
+	// 归档时结束审批流程
+	models.DB.Model(&models.ApprovalWorkflow{}).Where("contract_id = ? AND status = ?", contractID, "pending").
+		Update("status", models.WorkflowStatusCancelled)
+	models.DB.Model(&models.WorkflowApproval{}).Where("contract_id = ? AND status = ?", contractID, "pending").
+		Update("status", models.WorkflowStatusCancelled)
+
 	s.AddLifecycleEvent(contractID, LifecycleEventInput{
 		EventType:   string(models.LifecycleArchived),
 		FromStatus:  oldStatus,
@@ -414,8 +467,6 @@ func (s *ContractService) ArchiveContract(contractID uint, operatorID uint) (*mo
 var StatusChangeRequireApproval = []string{
 	"archived",
 	"terminated",
-	"in_progress",
-	"pending_pay",
 }
 
 func (s *ContractService) IsStatusChangeRequireApproval(newStatus string) bool {
@@ -475,7 +526,7 @@ func (s *ContractService) GetPendingStatusChangeRequests(role string) ([]models.
 	var requests []models.StatusChangeRequest
 	query := models.DB.Preload("Contract.Customer").Preload("Requester").Order("created_at DESC")
 
-	if role == "manager" || role == "admin" {
+	if role == "sales_manager" || role == "admin" {
 		query = query.Where("status = ?", "pending")
 	}
 

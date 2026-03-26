@@ -14,6 +14,7 @@
       </el-form>
 
       <el-table :data="tableData" style="width: 100%" v-loading="loading">
+        <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column prop="contract_no" label="合同编号" width="150" />
         <el-table-column prop="title" label="合同标题" />
         <el-table-column prop="amount" label="金额" width="120">

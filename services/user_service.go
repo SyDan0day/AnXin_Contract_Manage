@@ -137,6 +137,20 @@ func (s *UserService) DeleteUser(id uint) error {
 	return result.Error
 }
 
+func (s *UserService) ResetPassword(id uint, newPassword string) error {
+	var user models.User
+	if err := models.DB.First(&user, id).Error; err != nil {
+		return err
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	return models.DB.Model(&user).Update("hashed_password", string(hashedPassword)).Error
+}
+
 func (s *UserService) AuthenticateUser(username, password string) (*models.User, error) {
 	user, err := s.GetUserByUsername(username)
 	if err != nil {

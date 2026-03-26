@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"contract-manage/models"
 	"contract-manage/services"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -49,7 +49,7 @@ func (h *WorkflowHandler) CreateWorkflow(c *gin.Context) {
 
 	workflow, err := h.workflowService.CreateWorkflow(input.ContractID, input.CreatorRole)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create workflow"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to create workflow: %v, ContractID: %d, CreatorRole: %s", err, input.ContractID, input.CreatorRole)})
 		return
 	}
 
@@ -68,11 +68,34 @@ func (h *WorkflowHandler) Approve(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetUint("user_id")
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+	userIDUint, _ := userID.(uint)
 
-	err := h.workflowService.Approve(input.WorkflowID, 0, input.Level, uint64(userID), input.Comment)
+	role, exists := c.Get("role")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Role not found"})
+		return
+	}
+	roleStr, _ := role.(string)
+
+	currentApproval, err := h.workflowService.GetApprovalByLevel(input.WorkflowID, input.Level)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to approve"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Approval not found"})
+		return
+	}
+
+	if currentApproval.ApproverRole != roleStr {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You don't have permission to approve this level"})
+		return
+	}
+
+	err = h.workflowService.Approve(input.WorkflowID, 0, input.Level, uint64(userIDUint), input.Comment)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to approve: " + err.Error()})
 		return
 	}
 
@@ -103,15 +126,16 @@ func (h *WorkflowHandler) Reject(c *gin.Context) {
 }
 
 func (h *WorkflowHandler) GetMyPendingApproval(c *gin.Context) {
-	user, exists := c.Get("user")
+	role, exists := c.Get("role")
 	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Role not found in context"})
 		return
 	}
+	roleStr, _ := role.(string)
 
-	approvals, err := h.workflowService.GetPendingApprovals(string(user.(*models.User).Role))
+	approvals, err := h.workflowService.GetPendingApprovalsByRoleAndLevel(roleStr)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get pending approvals"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get pending approvals: " + err.Error()})
 		return
 	}
 

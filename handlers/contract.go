@@ -72,23 +72,113 @@ func (h *ContractHandler) GetContracts(c *gin.Context) {
 	keyword = strings.ReplaceAll(keyword, "%", "\\%")
 	keyword = strings.ReplaceAll(keyword, "_", "\\_")
 
-	contracts, err := h.contractService.GetContracts(skip, limit, uint(customerID), uint(contractTypeID), status, keyword)
+	// 获取当前用户信息用于权限过滤
+	userID, _ := middleware.GetCurrentUserID(c)
+	role, _ := middleware.GetCurrentUserRole(c)
+
+	// 使用新方法，支持角色过滤
+	contracts, total, err := h.contractService.GetContracts(services.GetContractsParams{
+		Skip:           skip,
+		Limit:          limit,
+		CustomerID:     uint(customerID),
+		ContractTypeID: uint(contractTypeID),
+		Status:         status,
+		Keyword:        keyword,
+		UserID:         userID,
+		Role:           role,
+	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, contracts)
+	// 为每个合同添加最新的拒绝信息和审批信息
+	contractsWithRejection := make([]gin.H, 0, len(contracts))
+	for _, contract := range contracts {
+		contractData := gin.H{
+			"id":               contract.ID,
+			"contract_no":      contract.ContractNo,
+			"title":            contract.Title,
+			"customer_id":      contract.CustomerID,
+			"contract_type_id": contract.ContractTypeID,
+			"amount":           contract.Amount,
+			"currency":         contract.Currency,
+			"status":           contract.Status,
+			"sign_date":        contract.SignDate,
+			"start_date":       contract.StartDate,
+			"end_date":         contract.EndDate,
+			"payment_terms":    contract.PaymentTerms,
+			"content":          contract.Content,
+			"notes":            contract.Notes,
+			"creator_id":       contract.CreatorID,
+			"created_at":       contract.CreatedAt,
+			"updated_at":       contract.UpdatedAt,
+			"customer":         contract.Customer,
+			"creator":          contract.Creator,
+			"contract_type":    contract.ContractType,
+		}
+
+		// 获取最新的拒绝信息
+		var rejectionInfo map[string]interface{}
+		models.DB.Table("workflow_approvals as wa").
+			Select("wa.comment, wa.approved_at, u.full_name as approver_name, wa.approver_role").
+			Joins("LEFT JOIN users u ON u.id = wa.approver_id").
+			Where("wa.contract_id = ? AND wa.status = 'rejected'", contract.ID).
+			Order("wa.approved_at DESC").
+			Limit(1).
+			Scan(&rejectionInfo)
+
+		if rejectionInfo != nil && len(rejectionInfo) > 0 {
+			contractData["rejection_info"] = rejectionInfo
+		}
+
+		// 如果是审批中状态，获取当前审批级别
+		if contract.Status == "pending" {
+			var workflowInfo struct {
+				CurrentLevel int    `json:"current_level"`
+				MaxLevel     int    `json:"max_level"`
+				ApproverRole string `json:"approver_role"`
+			}
+			models.DB.Table("approval_workflows").
+				Select("current_level, max_level").
+				Where("contract_id = ? AND status = ?", contract.ID, "pending").
+				Order("created_at DESC").
+				Limit(1).
+				Scan(&workflowInfo)
+
+			if workflowInfo.MaxLevel > 0 {
+				contractData["current_approval_level"] = workflowInfo.CurrentLevel
+				contractData["max_approval_level"] = workflowInfo.MaxLevel
+
+				var currentApprover string
+				switch workflowInfo.CurrentLevel {
+				case 1:
+					currentApprover = "销售负责人"
+				case 2:
+					currentApprover = "技术负责人"
+				case 3:
+					currentApprover = "财务负责人"
+				default:
+					currentApprover = "待审批"
+				}
+				contractData["current_approver"] = currentApprover
+			}
+		}
+
+		contractsWithRejection = append(contractsWithRejection, contractData)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"items": contractsWithRejection,
+		"total": total,
+	})
 }
 
 func isValidContractStatus(status string) bool {
 	validStatuses := []string{
 		"draft",
 		"pending",
-		"approved",
 		"active",
-		"in_progress",
-		"pending_pay",
 		"completed",
 		"terminated",
 		"archived",
@@ -108,8 +198,17 @@ func (h *ContractHandler) GetContractByID(c *gin.Context) {
 		return
 	}
 
-	contract, err := h.contractService.GetContractByID(uint(id))
+	// 获取当前用户信息
+	userID, _ := middleware.GetCurrentUserID(c)
+	role, _ := middleware.GetCurrentUserRole(c)
+
+	// 使用带权限检查的方法
+	contract, err := h.contractService.GetContractByIDWithAuth(uint(id), userID, role)
 	if err != nil {
+		if strings.Contains(err.Error(), "无权限") {
+			c.JSON(http.StatusForbidden, gin.H{"error": "无权限查看此合同"})
+			return
+		}
 		c.JSON(http.StatusNotFound, gin.H{"error": "Contract not found"})
 		return
 	}
@@ -176,67 +275,6 @@ func (h *ContractHandler) DeleteContract(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (h *ContractHandler) GetContractExecutions(c *gin.Context) {
-	contractID, err := strconv.ParseUint(c.Param("contract_id"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid contract ID"})
-		return
-	}
-
-	executions, err := h.contractService.GetContractExecutions(uint(contractID))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, executions)
-}
-
-func (h *ContractHandler) CreateContractExecution(c *gin.Context) {
-	contractID, err := strconv.ParseUint(c.Param("contract_id"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid contract ID"})
-		return
-	}
-
-	var input services.ContractExecutionCreateInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	input.ContractID = uint(contractID)
-
-	userID, exists := middleware.GetCurrentUserID(c)
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
-		return
-	}
-
-	execution, err := h.contractService.CreateContractExecution(input, userID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusCreated, execution)
-}
-
-func (h *ContractHandler) DeleteExecution(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("execution_id"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
-		return
-	}
-
-	if err := h.contractService.DeleteExecution(uint(id)); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.Status(http.StatusNoContent)
-}
-
 func (h *ContractHandler) GetContractDocuments(c *gin.Context) {
 	contractID, err := strconv.ParseUint(c.Param("contract_id"), 10, 32)
 	if err != nil {
@@ -271,6 +309,21 @@ func (h *ContractHandler) CreateContractDocument(c *gin.Context) {
 		"pdf": true, "doc": true, "docx": true, "xls": true, "xlsx": true,
 		"jpg": true, "jpeg": true, "png": true, "gif": true, "bmp": true, "webp": true,
 		"txt": true,
+	}
+
+	// MIME类型白名单
+	allowedMIMETypes := map[string]bool{
+		"application/pdf":    true,
+		"application/msword": true,
+		"application/vnd.openxmlformats-officedocument.wordprocessingml.document": true,
+		"application/vnd.ms-excel": true,
+		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": true,
+		"image/jpeg": true,
+		"image/png":  true,
+		"image/gif":  true,
+		"image/bmp":  true,
+		"image/webp": true,
+		"text/plain": true,
 	}
 
 	// 获取文件扩展名（转为小写）
@@ -334,6 +387,13 @@ func (h *ContractHandler) CreateContractDocument(c *gin.Context) {
 		return
 	}
 
+	// 使用http.DetectContentType检测文件真实MIME类型
+	detectedMIME := http.DetectContentType(buffer[:bytesRead])
+	if !allowedMIMETypes[detectedMIME] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "文件内容类型不匹配: " + detectedMIME})
+		return
+	}
+
 	if err := os.MkdirAll(filepath.Dir(cleanFilePath), 0755); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建目录失败"})
 		return
@@ -365,6 +425,41 @@ func (h *ContractHandler) CreateContractDocument(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, document)
+}
+
+// GeneratePreviewToken 生成预览令牌
+// POST /api/documents/:document_id/preview-token
+func (h *ContractHandler) GeneratePreviewToken(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("document_id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid document ID"})
+		return
+	}
+
+	// 验证文档是否存在
+	_, err = h.contractService.GetDocumentByID(uint(id))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Document not found"})
+		return
+	}
+
+	userID, exists := middleware.GetCurrentUserID(c)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	// 生成预览令牌
+	token, err := middleware.PreviewService.GenerateToken(uint(id), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate preview token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"preview_token": token,
+		"expires_in":    300, // 5分钟，单位秒
+	})
 }
 
 func (h *ContractHandler) PreviewDocument(c *gin.Context) {
@@ -865,6 +960,12 @@ func (h *ContractHandler) ApproveStatusChangeRequest(c *gin.Context) {
 		return
 	}
 
+	role, _ := middleware.GetCurrentUserRole(c)
+	if role != "sales_manager" && role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "只有销售负责人可以审批状态变更"})
+		return
+	}
+
 	var input struct {
 		Comment string `json:"comment"`
 	}
@@ -892,6 +993,12 @@ func (h *ContractHandler) RejectStatusChangeRequest(c *gin.Context) {
 	requestID, err := strconv.ParseUint(c.Param("request_id"), 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request ID"})
+		return
+	}
+
+	role, _ := middleware.GetCurrentUserRole(c)
+	if role != "sales_manager" && role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "只有销售负责人可以审批状态变更"})
 		return
 	}
 

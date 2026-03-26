@@ -416,10 +416,7 @@ curl -X POST http://localhost:8000/api/customers \
 **合同状态说明：**
 - `draft` - 草稿
 - `pending` - 待审批
-- `approved` - 已批准
 - `active` - 已生效
-- `in_progress` - 执行中
-- `pending_pay` - 待付款
 - `completed` - 已完成
 - `terminated` - 已终止
 - `archived` - 已归档
@@ -427,8 +424,6 @@ curl -X POST http://localhost:8000/api/customers \
 **需要审批的状态变更：**
 - `archived` (归档)
 - `terminated` (终止)
-- `in_progress` (执行中)
-- `pending_pay` (待付款)
 
 请求示例：
 

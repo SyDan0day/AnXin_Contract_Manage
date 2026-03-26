@@ -166,8 +166,17 @@ func GetCurrentUserID(c *gin.Context) (uint, bool) {
 	if !exists {
 		return 0, false
 	}
-	id, ok := userID.(uint)
-	return id, ok
+	// 支持多种类型转换
+	switch v := userID.(type) {
+	case uint:
+		return v, true
+	case int:
+		return uint(v), true
+	case int64:
+		return uint(v), true
+	default:
+		return 0, false
+	}
 }
 
 func GetCurrentUsername(c *gin.Context) (string, bool) {

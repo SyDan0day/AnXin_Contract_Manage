@@ -25,17 +25,20 @@
             {{ formatDateTime(row.created_at) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="240" fixed="right">
+        <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
               <el-button type="primary" link @click="handleView(row)">
-                <el-icon><View /></el-icon> 查看
+                <el-icon><View /></el-icon><span class="btn-text">查看</span>
               </el-button>
               <el-button v-if="row.status === 'draft'" type="warning" link @click="handleSubmit(row)">
-                <el-icon><Position /></el-icon> 提交
+                <el-icon><Position /></el-icon><span class="btn-text">提交</span>
               </el-button>
-              <el-button v-else-if="row.status === 'pending'" type="success" link @click="handleApprove(row)">
-                <el-icon><Check /></el-icon> {{ userRole === 'admin' ? '二级审批' : '一级审批' }}
+              <el-button v-else-if="row.status === 'pending'" type="primary" link @click="handleApprove(row)">
+                <el-icon><Edit /></el-icon><span class="btn-text">审批</span>
+              </el-button>
+              <el-button v-if="row.status === 'pending' && userRole === 'user'" type="danger" link @click="handleWithdraw(row)">
+                <el-icon><Close /></el-icon><span class="btn-text">撤回</span>
               </el-button>
               <el-button v-else-if="row.status === 'active'" type="info" link disabled>
                 已生效
@@ -46,7 +49,7 @@
       </el-table>
     </el-card>
 
-    <el-card style="margin-top: 20px" v-if="userRole === 'admin' || userRole === 'manager'">
+    <el-card style="margin-top: 20px" v-if="userRole === 'admin' || userRole === 'sales_manager'">
       <template #header>
         <div class="header">
           <span>状态变更审批</span>
@@ -103,13 +106,13 @@
           <el-input :value="'¥' + currentContract.amount?.toFixed(2)" disabled />
         </el-form-item>
         <el-form-item label="审批级别">
-          <el-tag :type="userRole === 'admin' ? 'danger' : 'warning'">
-            {{ userRole === 'admin' ? '二级审批 (管理员)' : '一级审批 (经理)' }}
+          <el-tag type="warning">
+            {{ getApprovalLevelText(currentApprovalLevel) }}
           </el-tag>
         </el-form-item>
         <el-form-item label="审批结果" prop="status">
           <el-radio-group v-model="formData.status">
-            <el-radio label="approved">通过</el-radio>
+            <el-radio label="approved">同意</el-radio>
             <el-radio label="rejected">拒绝</el-radio>
           </el-radio-group>
         </el-form-item>
@@ -136,10 +139,11 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { View, Position, Check, Close } from '@element-plus/icons-vue'
+import { View, Position, Check, Close, Edit } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
-import { getPendingApprovals, createApproval, updateApproval } from '@/api/approval'
+import { getPendingApprovals, createApproval, withdrawApproval, updateApproval } from '@/api/approval'
 import { getPendingStatusChangeApprovals, approveStatusChangeRequest, rejectStatusChangeRequest } from '@/api/contract'
+import axios from 'axios'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -153,6 +157,8 @@ const tableData = ref([])
 const statusChangeData = ref([])
 const currentContract = ref({})
 const currentApprovalId = ref(null)
+const currentWorkflowId = ref(null)
+const currentApprovalLevel = ref(null)
 
 const formData = reactive({
   status: 'approved',
@@ -163,10 +169,7 @@ const getStatusText = (status) => {
   const map = {
     draft: '草稿',
     pending: '待审批',
-    approved: '已批准',
     active: '已生效',
-    in_progress: '执行中',
-    pending_pay: '待付款',
     completed: '已完成',
     terminated: '已终止',
     archived: '已归档'
@@ -209,6 +212,15 @@ const getContractStatusText = (status) => {
   return textMap[status] || status
 }
 
+const getApprovalLevelText = (level) => {
+  const levelMap = {
+    1: '一级审批 (销售负责人)',
+    2: '二级审批 (技术负责人)',
+    3: '三级审批 (财务负责人)'
+  }
+  return levelMap[level] || `第${level}级审批`
+}
+
 const loadData = async () => {
   loading.value = true
   try {
@@ -218,7 +230,7 @@ const loadData = async () => {
     loading.value = false
   }
   
-  if (userRole === 'admin' || userRole === 'manager') {
+  if (userRole === 'admin' || userRole === 'sales_manager') {
     statusChangeLoading.value = true
     try {
       const data = await getPendingStatusChangeApprovals()
@@ -286,19 +298,53 @@ const handleSubmit = async (row) => {
 const handleApprove = async (row) => {
   currentContract.value = row
   currentApprovalId.value = row.approval_id
+  currentWorkflowId.value = row.workflow_id
+  currentApprovalLevel.value = row.approval_level
   formData.status = 'approved'
   formData.comment = ''
   dialogVisible.value = true
 }
 
+const handleWithdraw = async (row) => {
+  try {
+    await ElMessageBox.confirm(`确定撤回合同 "${row.title}" 的审批申请吗？`, '撤回确认', {
+      confirmButtonText: '确定撤回',
+      cancelButtonText: '取消',
+      type: 'warning'
+    })
+    await withdrawApproval(row.id)
+    ElMessage.success('已撤回审批申请')
+    loadData()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error(error.response?.data?.error || '撤回失败')
+    }
+  }
+}
+
 const handleSubmitApproval = async () => {
-  await updateApproval(currentApprovalId.value, {
-    status: formData.status,
-    comment: formData.comment
-  })
-  ElMessage.success(formData.status === 'approved' ? '审批通过' : '审批拒绝')
-  dialogVisible.value = false
-  loadData()
+  try {
+    const response = await axios.put(`/api/approvals/${currentApprovalId.value}`, {
+      status: formData.status,
+      comment: formData.comment
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+    if (response.data) {
+      if (formData.status === 'approved') {
+        ElMessage.success('审批通过')
+      } else {
+        ElMessage.warning('审批已拒绝，合同已退回给销售')
+      }
+      dialogVisible.value = false
+      loadData()
+    }
+  } catch (error) {
+    ElMessage.error('审批失败: ' + (error.response?.data?.error || error.message || '未知错误'))
+  }
 }
 
 onMounted(() => {
@@ -321,13 +367,29 @@ onMounted(() => {
 .action-buttons {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  flex-wrap: wrap;
 }
 
 .action-buttons .el-button {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
+  padding: 4px 6px;
+  min-width: auto;
+}
+
+.action-buttons .btn-text {
+  display: inline;
+}
+
+@media (max-width: 768px) {
+  .btn-text {
+    display: none;
+  }
+  .action-buttons {
+    gap: 0;
+  }
 }
 
 .dialog-footer {

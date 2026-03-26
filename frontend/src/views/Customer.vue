@@ -25,6 +25,7 @@
           </div>
 
           <el-table :data="tableData" style="width: 100%" v-loading="loading">
+            <el-table-column type="index" label="序号" width="60" align="center" />
             <el-table-column prop="code" label="客户编码" width="120" />
             <el-table-column prop="name" label="客户名称" />
             <el-table-column prop="type" label="类型" width="100">

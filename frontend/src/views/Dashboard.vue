@@ -6,7 +6,7 @@
         <p class="page-desc">欢迎回来，{{ userStore.userInfo?.username }}！</p>
       </div>
       <div class="header-actions">
-        <el-button type="primary" :icon="Plus" @click="createContract">新建合同</el-button>
+        <el-button type="primary" :icon="Plus" @click="createContract" v-if="canCreateContract">新建合同</el-button>
       </div>
     </div>
     
@@ -162,6 +162,9 @@ import {
 
 const router = useRouter()
 const userStore = useUserStore()
+const userRole = computed(() => userStore.userInfo?.role || 'user')
+const canCreateContract = computed(() => userRole.value === 'user' || userRole.value === 'admin')
+
 const chartRef = ref(null)
 const chartType = ref('bar')
 const chartInstance = ref(null)

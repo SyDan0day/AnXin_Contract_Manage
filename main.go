@@ -1642,6 +1642,7 @@ func main() {
 	approvalHandler := handlers.NewApprovalHandler()
 	workflowHandler := handlers.NewWorkflowHandler(models.DB)
 	auditHandler := handlers.NewAuditHandler()
+	notificationHandler := handlers.NewNotificationHandler()
 
 	auth := r.Group("/api/auth")
 	auth.Use(middleware.RateLimitMiddleware())
@@ -1652,12 +1653,26 @@ func main() {
 		auth.GET("/users/:user_id", middleware.AuthMiddleware(), middleware.AdminRequiredMiddleware(), authHandler.GetUserByID)
 		auth.PUT("/users/:user_id", middleware.AuthMiddleware(), middleware.AdminRequiredMiddleware(), authHandler.UpdateUser)
 		auth.DELETE("/users/:user_id", middleware.AuthMiddleware(), middleware.AdminRequiredMiddleware(), authHandler.DeleteUser)
+		auth.POST("/users/:user_id/reset-password", middleware.AuthMiddleware(), middleware.AdminRequiredMiddleware(), authHandler.ResetPassword)
 	}
 
 	api := r.Group("/api")
 	api.Use(middleware.AuthMiddleware())
 	api.Use(handlers.AuditLogMiddleware(handlers.GetAuditService()))
 	{
+		// Test route at the very beginning
+		api.GET("/hello", func(c *gin.Context) {
+			c.JSON(200, gin.H{"message": "hello world"})
+		})
+
+		// Notification routes - at beginning for debugging
+		api.GET("/notification-counts", approvalHandler.GetNotificationCounts)
+		api.GET("/notification-list", notificationHandler.GetNotifications)
+		api.GET("/notification-unread", notificationHandler.GetUnreadNotifications)
+		api.GET("/notification-unread-count", notificationHandler.GetUnreadCount)
+		api.PUT("/notification-read-all", notificationHandler.MarkAsRead)
+		api.PUT("/notification-mark-read/:id", notificationHandler.MarkAsRead)
+
 		api.GET("/customers", customerHandler.GetCustomers)
 		api.GET("/customers/:customer_id", customerHandler.GetCustomerByID)
 		api.POST("/customers", customerHandler.CreateCustomer)
@@ -1680,17 +1695,15 @@ func main() {
 		api.DELETE("/contracts/:contract_id", contractHandler.DeleteContract)
 		api.GET("/contracts/:contract_id/lifecycle", contractHandler.GetContractLifecycle)
 
-		api.GET("/contracts/:contract_id/executions", contractHandler.GetContractExecutions)
-		api.POST("/contracts/:contract_id/executions", contractHandler.CreateContractExecution)
-		api.DELETE("/executions/:execution_id", contractHandler.DeleteExecution)
-
 		api.GET("/contracts/:contract_id/documents", contractHandler.GetContractDocuments)
 		api.POST("/contracts/:contract_id/documents", contractHandler.CreateContractDocument)
+		api.POST("/documents/:document_id/preview-token", contractHandler.GeneratePreviewToken)
 		api.GET("/documents/:document_id/preview", contractHandler.PreviewDocument)
 		api.DELETE("/documents/:document_id", contractHandler.DeleteDocument)
 
 		api.GET("/contracts/:contract_id/approvals", approvalHandler.GetContractApprovals)
 		api.POST("/contracts/:contract_id/approvals", approvalHandler.CreateApproval)
+		api.POST("/contracts/:contract_id/approvals/withdraw", approvalHandler.WithdrawApproval)
 		api.PUT("/approvals/:approval_id", approvalHandler.UpdateApproval)
 		api.GET("/pending-approvals", approvalHandler.GetPendingApprovals)
 
@@ -1712,7 +1725,6 @@ func main() {
 
 		api.GET("/expiring-contracts", approvalHandler.GetExpiringContracts)
 		api.GET("/statistics", approvalHandler.GetStatistics)
-		api.GET("/notifications/count", approvalHandler.GetNotificationCounts)
 
 		api.GET("/audit-logs", middleware.AdminRequiredMiddleware(), auditHandler.GetAuditLogs)
 		api.DELETE("/audit-logs/:id", middleware.AdminRequiredMiddleware(), auditHandler.DeleteAuditLog)

@@ -63,6 +63,7 @@
         v-loading="loading"
         @selection-change="handleSelectionChange"
       >
+        <el-table-column type="index" label="序号" width="60" align="center" />
         <el-table-column v-if="isAuditAdmin" type="selection" width="55" />
         <el-table-column prop="username" label="用户名" width="120" />
         <el-table-column prop="module" label="模块" width="80">
